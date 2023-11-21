@@ -327,3 +327,9 @@ exec add_vehicle_type('bmw', '4 series', 'automatic', 'convertible', 'petrol');
 exec add_vehicle_type('mazda', 'mx-5 miata', 'manual', 'convertible', 'gasoline');
 exec add_vehicle_type('audi', 'a3 cabriolet', 'automatic', 'convertible', 'petrol');
 
+-- Add discount types
+EXEC add_discount_type('FIRST', 5.00, 10.00);
+EXEC add_discount_type('NO_DISC', 0.00, 0.00);
+EXEC add_discount_type('NEW2024', 10.00, 30.00);
+EXEC add_discount_type('WONDER10', 20.00, 100.00);
+EXEC add_discount_type('PEACEOUT', 30.00, 120.00);
