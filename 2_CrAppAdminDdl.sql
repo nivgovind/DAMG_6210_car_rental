@@ -53,3 +53,13 @@ CREATE TABLE locations (
     name     VARCHAR2(100) NOT NULL,
     CONSTRAINT locations_pk PRIMARY KEY (id)
 );
+
+CREATE TABLE vehicle_types (
+    id                NUMBER DEFAULT vehicle_types_seq.nextval NOT NULL,
+    make              VARCHAR2(20) NOT NULL,
+    model             VARCHAR2(100) NOT NULL,
+    transmission_type VARCHAR2(100),
+    category          VARCHAR2(100) NOT NULL,
+    fuel_type         VARCHAR2(20) NOT NULL,
+    CONSTRAINT vehicle_types_pk PRIMARY KEY (id)
+);
