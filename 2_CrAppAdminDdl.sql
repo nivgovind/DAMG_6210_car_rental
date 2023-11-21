@@ -17,3 +17,22 @@ EXCEPTION
       END IF;
 END;
 /
+
+-- Drop sequences if already exists
+BEGIN
+    EXECUTE IMMEDIATE 'DROP SEQUENCE locations_seq';
+    EXECUTE IMMEDIATE 'DROP SEQUENCE discount_types_seq';
+    EXECUTE IMMEDIATE 'DROP SEQUENCE insurance_types_seq';
+    EXECUTE IMMEDIATE 'DROP SEQUENCE payment_methods_seq';
+    EXECUTE IMMEDIATE 'DROP SEQUENCE payment_transactions_seq';
+    EXECUTE IMMEDIATE 'DROP SEQUENCE reservations_seq';
+    EXECUTE IMMEDIATE 'DROP SEQUENCE users_seq';
+    EXECUTE IMMEDIATE 'DROP SEQUENCE vehicle_types_seq';
+    EXECUTE IMMEDIATE 'DROP SEQUENCE vehicles_seq';
+EXCEPTION
+    WHEN OTHERS THEN
+        IF SQLCODE != -2289 THEN
+            RAISE;
+        END IF;
+END;
+/
