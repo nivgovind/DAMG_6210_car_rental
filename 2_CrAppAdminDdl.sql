@@ -126,3 +126,30 @@ CREATE TABLE vehicles (
         REFERENCES locations(id)
 );
 
+
+CREATE TABLE reservations (
+    id                 NUMBER DEFAULT reservations_seq.nextval NOT NULL,
+    status             VARCHAR2(10) NOT NULL,
+    charge             NUMBER(7,2),
+    pickup_date        DATE NOT NULL,
+    dropoff_date       DATE NOT NULL,
+    insurance_id       VARCHAR2(20) NOT NULL,
+    pickup_location_id NUMBER,
+    dropoff_location_id NUMBER,
+    passenger_count    NUMBER,
+    vehicles_id        NUMBER NOT NULL,
+    users_id           NUMBER,
+    insurance_types_id NUMBER,
+    CONSTRAINT reservations_pk PRIMARY KEY (id),
+    CONSTRAINT reservations_insurance_types_fk FOREIGN KEY ( insurance_types_id )
+        REFERENCES insurance_types ( id ),
+    CONSTRAINT reservations_users_fk FOREIGN KEY ( users_id )
+        REFERENCES users ( id ),
+    CONSTRAINT reservations_vehicles_fk FOREIGN KEY ( vehicles_id )
+        REFERENCES vehicles ( id ),
+    CONSTRAINT pickup_location_fk FOREIGN KEY (pickup_location_id)
+        REFERENCES locations(id),
+    CONSTRAINT dropoff_location_fk FOREIGN KEY (dropoff_location_id)
+        REFERENCES locations(id),
+    CONSTRAINT status_check CHECK (status IN ('pending', 'active', 'completed', 'cancelled'))
+);
