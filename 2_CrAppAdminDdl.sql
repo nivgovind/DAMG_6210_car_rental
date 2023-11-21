@@ -93,3 +93,16 @@ CREATE TABLE users (
     CONSTRAINT users_locations_fk FOREIGN KEY (current_location_id)
         REFERENCES locations(id)
 );
+
+CREATE TABLE payment_methods (
+    id              NUMBER DEFAULT payment_methods_seq.nextval NOT NULL,
+    active_status   NUMBER NOT NULL CHECK (active_status IN (1,0)),
+    card_number     VARCHAR2(16) NOT NULL,
+    expiration_date DATE NOT NULL,
+    security_code   VARCHAR2(3) NOT NULL,
+    billing_address VARCHAR2(100),
+    users_id        NUMBER NOT NULL,
+    CONSTRAINT payment_methods_pk PRIMARY KEY (id),
+    CONSTRAINT payment_methods_users_fk FOREIGN KEY (users_id)
+        REFERENCES users(id) ON DELETE CASCADE
+);
