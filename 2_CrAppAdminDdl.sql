@@ -308,6 +308,102 @@ EXCEPTION
 END add_insurance_type;
 /
 
+-- Procedure for adding users
+CREATE OR REPLACE PROCEDURE add_user (
+    pi_role VARCHAR2,
+    pi_fname VARCHAR2,
+    pi_lname VARCHAR2,
+    pi_location VARCHAR2,
+    pi_DL VARCHAR2,
+    pi_age NUMBER,
+    pi_cname VARCHAR2,
+    pi_taxid VARCHAR2
+) AS
+    v_user_count NUMBER;
+    v_location_id locations.id%TYPE;
+    e_unique_code EXCEPTION;
+    e_incomplete_customer_info EXCEPTION;
+    e_incomplete_vendor_info EXCEPTION;
+    e_invalid_location_info EXCEPTION;
+    e_invalid_role EXCEPTION;
+    e_invalid_age EXCEPTION;
+
+BEGIN
+    SELECT COUNT(*) INTO v_user_count FROM users WHERE fname = pi_fname AND lname = pi_lname;
+    
+    IF pi_role != 'customer' AND pi_role != 'vendor' THEN
+        RAISE e_invalid_role;
+    END IF;
+
+    SELECT id
+        INTO v_location_id
+        FROM locations
+        WHERE name = pi_location;
+
+    IF v_location_id IS NULL THEN
+        raise e_invalid_location_info;
+    END IF;
+
+    IF pi_role = 'customer' THEN
+        IF pi_age < 23 THEN
+            RAISE e_invalid_age;
+        END IF;
+
+        IF LENGTH(pi_DL) < 16 THEN
+            RAISE e_incomplete_customer_info;
+        END IF;
+    ELSIF pi_role = 'vendor' AND LENGTH(pi_taxid) < 16 AND LENGTH(pi_cname) < 5 THEN
+        RAISE e_incomplete_vendor_info;
+    END IF;
+
+    IF v_user_count = 0 THEN
+        INSERT INTO users (
+            role,
+            fname,
+            lname,
+            current_location_id,
+            driver_license,
+            age,
+            company_name,
+            tax_id
+        ) VALUES (
+            pi_role,
+            pi_fname,
+            pi_lname,
+            v_location_id,
+            pi_DL,
+            pi_age,
+            pi_cname,
+            pi_taxid
+        );
+
+        DBMS_OUTPUT.PUT_LINE(pi_fname || ' added');
+    ELSE
+        RAISE e_unique_code;
+    END IF;
+
+    COMMIT;
+
+EXCEPTION
+    WHEN e_unique_code THEN
+        DBMS_OUTPUT.PUT_LINE(pi_fname || 'already exists');
+    WHEN e_incomplete_customer_info THEN
+        DBMS_OUTPUT.PUT_LINE(pi_fname || 'does not have valid customer info');
+    WHEN e_incomplete_vendor_info THEN
+        DBMS_OUTPUT.PUT_LINE(pi_fname || 'does not have valid vendor info');
+    WHEN e_invalid_location_info THEN
+        DBMS_OUTPUT.PUT_LINE(pi_location || 'is not valid location info');
+    WHEN e_invalid_role THEN
+        DBMS_OUTPUT.PUT_LINE(pi_role || 'is not valid role info');
+    WHEN e_invalid_age THEN
+        DBMS_OUTPUT.PUT_LINE(pi_age || 'is not valid age info');
+    WHEN OTHERS THEN
+        RAISE;
+        COMMIT;
+
+END add_user;
+/
+
 
 -- Add locations
 exec add_location('New York');
