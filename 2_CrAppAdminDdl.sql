@@ -171,3 +171,32 @@ CREATE TABLE payment_transactions (
         REFERENCES reservations ( id ),
     CONSTRAINT payment_transactions_status_check CHECK (status IN (1, 0))
 );
+
+-- Procedure for adding location
+CREATE OR REPLACE PROCEDURE add_location (
+    pi_name VARCHAR2
+) AS
+    v_name_count NUMBER;
+    e_unique_name EXCEPTION;
+
+BEGIN
+    SELECT COUNT(*) INTO v_name_count FROM locations WHERE name = pi_name;
+
+    IF v_name_count = 0 THEN
+        INSERT INTO locations VALUES (locations_seq.nextval, pi_name);
+        DBMS_OUTPUT.PUT_LINE(pi_name || ' added');
+    ELSE
+        RAISE e_unique_name;
+    END IF;
+
+    COMMIT;
+
+EXCEPTION
+    WHEN e_unique_name THEN
+        DBMS_OUTPUT.PUT_LINE(pi_name || 'already exists');
+    WHEN OTHERS THEN
+        RAISE;
+        COMMIT;
+
+END add_location;
+/
