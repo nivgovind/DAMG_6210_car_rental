@@ -106,3 +106,23 @@ CREATE TABLE payment_methods (
     CONSTRAINT payment_methods_users_fk FOREIGN KEY (users_id)
         REFERENCES users(id) ON DELETE CASCADE
 );
+
+CREATE TABLE vehicles (
+    id                  NUMBER DEFAULT vehicles_seq.nextval NOT NULL,
+    hourly_rate         NUMBER(7,2) NOT NULL,
+    miles_driven        NUMBER,
+    availability_status NUMBER NOT NULL CHECK (availability_status IN (1,0)),
+    passenger_capacity  NUMBER,
+    registration_id     VARCHAR2(20) NOT NULL,
+    current_location_id NUMBER,
+    users_id            NUMBER,
+    vehicle_type_id     NUMBER,
+    CONSTRAINT vehicles_pk PRIMARY KEY (id),
+    CONSTRAINT vehicles_users_fk FOREIGN KEY ( users_id )
+        REFERENCES users ( id ) ON DELETE CASCADE,
+    CONSTRAINT vehicles_vehicle_type_fk FOREIGN KEY ( vehicle_type_id )
+        REFERENCES vehicle_types ( id ),
+    CONSTRAINT vehicles_locations_fk FOREIGN KEY (current_location_id)
+        REFERENCES locations(id)
+);
+
