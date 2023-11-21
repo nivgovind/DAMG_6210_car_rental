@@ -470,3 +470,9 @@ EXEC add_insurance_type('star all', 2000);
 EXEC add_insurance_type('safety first', 5000);
 EXEC add_insurance_type('travel shield', 3000);
 EXEC add_insurance_type('care first', 1000);
+
+-- Add users
+EXEC add_user('customer', 'Abigail', 'Gring', 'New York', 'DL12345678901234', 25, NULL, NULL);
+EXEC add_user('vendor', 'Bob', 'Cat', 'Los Angeles', NULL, NULL, 'BobCat rentals', 'TaxID1234567890123');
+EXEC add_user('customer', 'Cat', 'Stevens', 'Boston', 'DL98765432109876', 30, NULL, NULL);
+EXEC add_user('vendor', 'Dina', 'Jones', 'Minneapolis', NULL, NULL, 'New Old rentals', 'TaxID8765432109876');
