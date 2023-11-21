@@ -201,6 +201,39 @@ EXCEPTION
 END add_location;
 /
 
+-- Procedure for adding vehicle types
+CREATE OR REPLACE PROCEDURE add_vehicle_type (
+    pi_make VARCHAR2,
+    pi_model VARCHAR2,
+    pi_transmission_type VARCHAR2,
+    pi_category VARCHAR2,
+    pi_fuel_type VARCHAR2
+) AS
+    v_model_count NUMBER;
+    e_unique_name EXCEPTION;
+
+BEGIN
+    SELECT COUNT(*) INTO v_model_count FROM vehicle_types WHERE make = pi_make AND model = pi_model;
+
+    IF v_model_count = 0 THEN
+        INSERT INTO vehicle_types VALUES (vehicle_types_seq.nextval, pi_make, pi_model, pi_transmission_type, pi_category, pi_fuel_type);
+        DBMS_OUTPUT.PUT_LINE(pi_make || '-' || pi_model || ' added');
+    ELSE
+        RAISE e_unique_name;
+    END IF;
+
+    COMMIT;
+
+EXCEPTION
+    WHEN e_unique_name THEN
+        DBMS_OUTPUT.PUT_LINE(pi_make || '-' || pi_model || ' already exists');
+    WHEN OTHERS THEN
+        RAISE;
+        COMMIT;
+
+END add_vehicle_type;
+/
+
 -- Add locations
 exec add_location('New York');
 exec add_location('Los Angeles');
