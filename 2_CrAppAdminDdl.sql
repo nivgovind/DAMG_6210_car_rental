@@ -153,3 +153,21 @@ CREATE TABLE reservations (
         REFERENCES locations(id),
     CONSTRAINT status_check CHECK (status IN ('pending', 'active', 'completed', 'cancelled'))
 );
+
+CREATE TABLE payment_transactions (
+    id                 NUMBER DEFAULT payment_transactions_seq.nextval NOT NULL,
+    status             NUMBER NOT NULL,
+    amount             NUMBER(7,2) NOT NULL,
+    approval_code      VARCHAR2(20),
+    reservations_id    NUMBER,
+    payment_methods_id NUMBER,
+    discount_types_id  NUMBER,
+    CONSTRAINT payment_transactions_pk PRIMARY KEY (id),
+    CONSTRAINT payment_transactions_discount_types_fk FOREIGN KEY ( discount_types_id )
+        REFERENCES discount_types ( id ),
+    CONSTRAINT payment_transactions_payment_methods_fk FOREIGN KEY ( payment_methods_id )
+        REFERENCES payment_methods ( id ),
+    CONSTRAINT payment_transactions_reservations_fk FOREIGN KEY ( reservations_id )
+        REFERENCES reservations ( id ),
+    CONSTRAINT payment_transactions_status_check CHECK (status IN (1, 0))
+);
