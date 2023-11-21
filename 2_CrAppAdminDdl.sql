@@ -71,3 +71,10 @@ CREATE TABLE discount_types (
     min_eligible_charge NUMBER(7,2) NOT NULL,
     CONSTRAINT discount_types_pk PRIMARY KEY (id)
 );
+
+CREATE TABLE insurance_types (
+    id       NUMBER DEFAULT insurance_types_seq.nextval NOT NULL,
+    coverage NUMBER(7,2) NOT NULL,
+    name     VARCHAR2(100) NOT NULL,
+    CONSTRAINT insurance_types_pk PRIMARY KEY (id)
+);
