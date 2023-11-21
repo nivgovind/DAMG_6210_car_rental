@@ -272,6 +272,41 @@ EXCEPTION
 END add_discount_type;
 /
 
+-- Procedure for adding insurance types
+CREATE OR REPLACE PROCEDURE add_insurance_type (
+    pi_name VARCHAR2,
+    pi_coverage NUMBER
+) AS
+    v_name_count NUMBER;
+    e_unique_code EXCEPTION;
+    e_invalid_amount EXCEPTION;
+
+BEGIN
+    SELECT COUNT(*) INTO v_name_count FROM insurance_types WHERE name = pi_name;
+    IF pi_coverage <= 0 THEN
+        RAISE e_invalid_amount;
+    END IF;
+
+    IF v_name_count = 0 THEN
+        INSERT INTO insurance_types VALUES (insurance_types_seq.nextval, pi_coverage, pi_name);
+        DBMS_OUTPUT.PUT_LINE(pi_name || ' added');
+    ELSE
+        RAISE e_unique_code;
+    END IF;
+
+    COMMIT;
+
+EXCEPTION
+    WHEN e_unique_code THEN
+        DBMS_OUTPUT.PUT_LINE(pi_name || 'already exists');
+    WHEN e_invalid_amount THEN
+        DBMS_OUTPUT.PUT_LINE(pi_coverage || 'is not a valid coverage amount');
+    WHEN OTHERS THEN
+        RAISE;
+        COMMIT;
+
+END add_insurance_type;
+/
 
 
 -- Add locations
