@@ -36,3 +36,13 @@ EXCEPTION
         END IF;
 END;
 /
+-- Create sequences
+CREATE SEQUENCE locations_seq START WITH 1;
+CREATE SEQUENCE users_seq START WITH 1;
+CREATE SEQUENCE vehicle_types_seq START WITH 1;
+CREATE SEQUENCE discount_types_seq START WITH 1;
+CREATE SEQUENCE insurance_types_seq START WITH 1;
+CREATE SEQUENCE payment_methods_seq START WITH 1;
+CREATE SEQUENCE payment_transactions_seq START WITH 1;
+CREATE SEQUENCE reservations_seq START WITH 1;
+CREATE SEQUENCE vehicles_seq START WITH 1;
