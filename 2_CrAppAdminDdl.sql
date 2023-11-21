@@ -254,3 +254,35 @@ exec add_location('Austin');
 exec add_location('Nashville');
 exec add_location('San Diego');
 exec add_location('Minneapolis');
+
+-- Add vehicle types
+-- Sedan
+exec add_vehicle_type('honda', 'accord', 'automatic', 'sedan', 'petrol');
+exec add_vehicle_type('toyota', 'corolla', 'manual', 'sedan', 'gasoline');
+exec add_vehicle_type('ford', 'fusion', 'automatic', 'sedan', 'hybrid');
+exec add_vehicle_type('chevrolet', 'malibu', 'automatic', 'sedan', 'gasoline');
+exec add_vehicle_type('nissan', 'sentra', 'cvt', 'sedan', 'petrol');
+-- SUV
+exec add_vehicle_type('jeep', 'cherokee', 'automatic', 'suv', 'gasoline');
+exec add_vehicle_type('honda', 'cr-v', 'cvt', 'suv', 'petrol');
+exec add_vehicle_type('toyota', 'highlander', 'automatic', 'suv', 'hybrid');
+exec add_vehicle_type('subaru', 'outback', 'automatic', 'suv', 'gasoline');
+exec add_vehicle_type('ford', 'explorer', 'automatic', 'suv', 'petrol');
+-- Truck
+exec add_vehicle_type('chevrolet', 'silverado', 'automatic', 'truck', 'diesel');
+exec add_vehicle_type('ford', 'f-250', 'automatic', 'truck', 'gasoline');
+exec add_vehicle_type('ram', '1500', 'automatic', 'truck', 'diesel');
+exec add_vehicle_type('toyota', 'tundra', 'automatic', 'truck', 'gasoline');
+exec add_vehicle_type('nissan', 'titan', 'automatic', 'truck', 'petrol');
+-- Hatchback
+exec add_vehicle_type('volkswagen', 'golf', 'manual', 'hatchback', 'petrol');
+exec add_vehicle_type('ford', 'fiesta', 'automatic', 'hatchback', 'gasoline');
+exec add_vehicle_type('honda', 'fit', 'cvt', 'hatchback', 'petrol');
+exec add_vehicle_type('toyota', 'yaris', 'manual', 'hatchback', 'petrol');
+exec add_vehicle_type('mazda', 'mazda3', 'automatic', 'hatchback', 'gasoline');
+-- Convertible
+exec add_vehicle_type('ford', 'mustang', 'automatic', 'convertible', 'petrol');
+exec add_vehicle_type('chevrolet', 'camaro', 'manual', 'convertible', 'petrol');
+exec add_vehicle_type('bmw', '4 series', 'automatic', 'convertible', 'petrol');
+exec add_vehicle_type('mazda', 'mx-5 miata', 'manual', 'convertible', 'gasoline');
+exec add_vehicle_type('audi', 'a3 cabriolet', 'automatic', 'convertible', 'petrol');
