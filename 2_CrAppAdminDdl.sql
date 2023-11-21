@@ -663,6 +663,89 @@ EXCEPTION
 END add_reservation;
 /
 
+-- Procedure for adding payment transactions
+CREATE OR REPLACE PROCEDURE add_payment_transaction (
+    pi_status VARCHAR2,
+    pi_amount NUMBER,
+    pi_approval_code VARCHAR2,
+    pi_reservation_id NUMBER,
+    pi_card_number VARCHAR2,
+    pi_discount_code VARCHAR2
+) AS
+    v_reservation_id reservations.id%TYPE;
+    v_status NUMBER;
+    v_payment_method_id payment_methods.id%TYPE;
+    v_discount_type_id discount_types.id%TYPE;
+    e_invalid_reservation EXCEPTION;
+    e_invalid_payment_method EXCEPTION;
+    e_invalid_discount_type EXCEPTION;
+    e_invalid_data EXCEPTION;
+BEGIN
+    SELECT id INTO v_reservation_id FROM reservations WHERE id = pi_reservation_id;
+
+    IF v_reservation_id IS NULL THEN
+        RAISE e_invalid_reservation;
+    END IF;
+
+    IF pi_status = 'pending' THEN
+        v_status := 0;
+    ELSIF pi_status = 'completed' THEN
+        v_status := 1;
+    ELSE
+        RAISE e_invalid_data;
+    END IF;
+
+    SELECT id INTO v_payment_method_id FROM payment_methods WHERE card_number = pi_card_number;
+
+    IF v_payment_method_id IS NULL THEN
+        RAISE e_invalid_payment_method;
+    END IF;
+
+    
+    SELECT id INTO v_discount_type_id FROM discount_types WHERE code = pi_discount_code;
+    
+    IF pi_discount_code IS NULL OR pi_discount_code = '' THEN
+        SELECT id INTO v_discount_type_id FROM discount_types WHERE code = 'NO_DISC';
+    ELSE
+        SELECT id INTO v_discount_type_id FROM discount_types WHERE code = pi_discount_code;
+    END IF;
+
+    INSERT INTO payment_transactions (
+        id,
+        status,
+        amount,
+        approval_code,
+        reservations_id,
+        payment_methods_id,
+        discount_types_id
+    ) VALUES (
+        payment_transactions_seq.nextval,
+        v_status,
+        pi_amount,
+        pi_approval_code,
+        v_reservation_id,
+        v_payment_method_id,
+        v_discount_type_id
+    );
+
+    DBMS_OUTPUT.PUT_LINE('Payment transaction added');
+    COMMIT;
+
+EXCEPTION
+    WHEN e_invalid_reservation THEN
+        DBMS_OUTPUT.PUT_LINE('Invalid reservation');
+    WHEN e_invalid_payment_method THEN
+        DBMS_OUTPUT.PUT_LINE('Invalid payment method');
+    WHEN e_invalid_discount_type THEN
+        DBMS_OUTPUT.PUT_LINE('Invalid discount type');
+    WHEN e_invalid_data THEN
+        DBMS_OUTPUT.PUT_LINE('Invalid status');
+    WHEN OTHERS THEN
+        RAISE;
+        ROLLBACK;
+
+END add_payment_transaction;
+/
 
 
 
@@ -756,3 +839,9 @@ EXEC add_reservation('active',200.00,'2023-12-02','2023-12-11','TS012','New York
 EXEC add_reservation('completed',300.00,'2023-01-01','2023-01-10','SF004','New York','Boston', 2,'NYE345MID0456OOP','Abigail','safety first');
 EXEC add_reservation('active',350.00,'2023-12-01','2023-12-12','CF001','New York','Boston', 6,'NYE678MID4056OOP','Abigail','care first');
 EXEC add_reservation('cancelled',110.00,'2024-11-01','2023-11-10','SF034','New York','Boston', 2,'ARK678NEW7908OOP','Abigail','safety first');
+
+-- Add Payment transactions
+EXEC add_payment_transaction('completed', 100.00, 'VAR300com', 1, '1234876539081234', 'WONDER10');
+EXEC add_payment_transaction('completed', 200.00, 'WERE200', 2, '1234876539081234', 'NEW2024');
+EXEC add_payment_transaction('completed', 300.00, 'COMP20', 3, '1234876539081234', 'FIRST');
+EXEC add_payment_transaction('completed', 350.00, 'COP20we', 4, '1234876539081234', 'NO_DISC');
