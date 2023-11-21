@@ -368,3 +368,9 @@ EXEC add_discount_type('NO_DISC', 0.00, 0.00);
 EXEC add_discount_type('NEW2024', 10.00, 30.00);
 EXEC add_discount_type('WONDER10', 20.00, 100.00);
 EXEC add_discount_type('PEACEOUT', 30.00, 120.00);
+
+-- Add insurance types
+EXEC add_insurance_type('star all', 2000);
+EXEC add_insurance_type('safety first', 5000);
+EXEC add_insurance_type('travel shield', 3000);
+EXEC add_insurance_type('care first', 1000);
