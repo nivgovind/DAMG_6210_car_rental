@@ -46,3 +46,10 @@ CREATE SEQUENCE payment_methods_seq START WITH 1;
 CREATE SEQUENCE payment_transactions_seq START WITH 1;
 CREATE SEQUENCE reservations_seq START WITH 1;
 CREATE SEQUENCE vehicles_seq START WITH 1;
+
+-- Create tables
+CREATE TABLE locations (
+    id       NUMBER DEFAULT locations_seq.nextval NOT NULL,
+    name     VARCHAR2(100) NOT NULL,
+    CONSTRAINT locations_pk PRIMARY KEY (id)
+);
