@@ -234,6 +234,46 @@ EXCEPTION
 END add_vehicle_type;
 /
 
+
+-- Procedure for adding discount types
+CREATE OR REPLACE PROCEDURE add_discount_type (
+    pi_code VARCHAR2,
+    pi_min_amount NUMBER,
+    pi_amount NUMBER
+) AS
+    v_code_count NUMBER;
+    e_unique_code EXCEPTION;
+    e_invalid_amount EXCEPTION;
+
+BEGIN
+    SELECT COUNT(*) INTO v_code_count FROM discount_types WHERE code = pi_code;
+    IF pi_amount < 0 THEN
+        RAISE e_invalid_amount;
+    END IF;
+
+    IF v_code_count = 0 THEN
+        INSERT INTO discount_types VALUES (discount_types_seq.nextval, pi_code, pi_min_amount, pi_amount);
+        DBMS_OUTPUT.PUT_LINE(pi_code || ' added');
+    ELSE
+        RAISE e_unique_code;
+    END IF;
+
+    COMMIT;
+
+EXCEPTION
+    WHEN e_unique_code THEN
+        DBMS_OUTPUT.PUT_LINE(pi_code || 'already exists');
+    WHEN e_invalid_amount THEN
+        DBMS_OUTPUT.PUT_LINE(pi_amount || 'is not a valid discount amount');
+    WHEN OTHERS THEN
+        RAISE;
+        COMMIT;
+
+END add_discount_type;
+/
+
+
+
 -- Add locations
 exec add_location('New York');
 exec add_location('Los Angeles');
@@ -286,3 +326,4 @@ exec add_vehicle_type('chevrolet', 'camaro', 'manual', 'convertible', 'petrol');
 exec add_vehicle_type('bmw', '4 series', 'automatic', 'convertible', 'petrol');
 exec add_vehicle_type('mazda', 'mx-5 miata', 'manual', 'convertible', 'gasoline');
 exec add_vehicle_type('audi', 'a3 cabriolet', 'automatic', 'convertible', 'petrol');
+
