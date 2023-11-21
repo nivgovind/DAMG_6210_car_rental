@@ -503,6 +503,74 @@ EXCEPTION
 END add_vehicle;
 /
 
+-- Procedure for adding payment methods
+CREATE OR REPLACE PROCEDURE add_payment_method (
+    pi_card_number VARCHAR2,
+    pi_active_status VARCHAR2,
+    pi_expiration_date VARCHAR2,
+    pi_security_code VARCHAR2,
+    pi_billing_address VARCHAR2,
+    pi_user_name VARCHAR
+) AS
+    v_card_count NUMBER;
+    v_status NUMBER;
+    v_expiration_date DATE;
+    e_unique_name EXCEPTION;
+    v_user_id users.id%TYPE;
+    e_invalid_ref EXCEPTION;
+    e_invalid_data EXCEPTION;
+
+BEGIN
+    SELECT COUNT(*) INTO v_card_count FROM payment_methods WHERE card_number = pi_card_number;
+    v_expiration_date := TO_DATE(pi_expiration_date, 'YYYY-MM-DD');
+    
+    IF pi_active_status = 'true' THEN
+        v_status := 1;
+    ELSIF pi_active_status = 'false' THEN
+        v_status := 0;
+    ELSE
+        RAISE e_invalid_data;
+    END IF;
+    
+    SELECT id
+        INTO v_user_id
+        FROM users
+        WHERE fname = pi_user_name;
+
+    IF v_user_id IS NULL THEN
+        RAISE e_invalid_ref;
+    END IF;
+
+    IF LENGTH(pi_card_number) != 16 OR LENGTH(pi_security_code) != 3 OR v_expiration_date < SYSDATE THEN
+        RAISE e_invalid_data;
+    END IF;
+
+    IF v_card_count = 0 THEN
+        INSERT INTO payment_methods (id, active_status, card_number, expiration_date, security_code, billing_address, users_id)
+        VALUES (payment_methods_seq.nextval, v_status, pi_card_number, v_expiration_date, pi_security_code, pi_billing_address, v_user_id);
+
+        DBMS_OUTPUT.PUT_LINE(pi_card_number || ' added');
+    ELSE
+        RAISE e_unique_name;
+    END IF;
+
+    COMMIT;
+
+EXCEPTION
+    WHEN e_unique_name THEN
+        DBMS_OUTPUT.PUT_LINE(pi_card_number || ' already exists');
+    WHEN e_invalid_ref THEN
+        DBMS_OUTPUT.PUT_LINE('References do not exist');
+    WHEN e_invalid_data THEN
+        DBMS_OUTPUT.PUT_LINE('Invalid data');
+    WHEN OTHERS THEN
+        RAISE;
+        ROLLBACK;
+
+END add_payment_method;
+/
+
+
 
 -- Add locations
 exec add_location('New York');
@@ -581,3 +649,9 @@ EXEC add_vehicle(25.00, 5000, 'true', 5, 'BOS123NE0W456OOP', 'New York', 'Bob', 
 EXEC add_vehicle(40.00, 5000, 'true', 5, 'NYE345MID0456OOP', 'New York', 'Dina', 'mustang')
 EXEC add_vehicle(50.00, 5000, 'true', 5, 'NYE678MID4056OOP', 'New York', 'Dina', 'camaro')
 EXEC add_vehicle(30.00, 5000, 'true', 5, 'ARK678NEW7908OOP', 'New York', 'Bob', 'fiesta')
+
+-- Add payment methods
+EXEC add_payment_method('1234876539081234','true', '2024-01-31','186','1 kev St, New York, USA','Abigail');
+EXEC add_payment_method('1234567890123456','true', '2027-12-31','123','1 kev St, New York, USA','Abigail');
+EXEC add_payment_method('7432738484381812','true', '2026-03-31','354','34 Main St, Boston, USA','Cat');
+EXEC add_payment_method('6363712392387232','true', '2027-10-31','154','123 Main St, Boston, USA','Cat');
