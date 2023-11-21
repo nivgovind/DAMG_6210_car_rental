@@ -570,6 +570,100 @@ EXCEPTION
 END add_payment_method;
 /
 
+-- Procedure for adding reservations
+CREATE OR REPLACE PROCEDURE add_reservation (
+    pi_status VARCHAR2,
+    pi_charge NUMBER,
+    pi_pickup_date VARCHAR2,
+    pi_dropoff_date VARCHAR2,
+    pi_insurance_id VARCHAR2,
+    pi_pickup_location_name VARCHAR2,
+    pi_dropoff_location_name VARCHAR2,
+    pi_passenger_count NUMBER,
+    pi_vehicle_registration_id VARCHAR2,
+    pi_user_name VARCHAR2,
+    pi_insurance_type_name VARCHAR2
+) AS
+    v_pickup_location_id locations.id%TYPE;
+    v_dropoff_location_id locations.id%TYPE;
+    v_insurance_type_id insurance_types.id%TYPE;
+    v_user_id users.id%TYPE;
+    v_vehicle_id vehicles.id%TYPE;
+    e_invalid_location EXCEPTION;
+    e_invalid_insurance EXCEPTION;
+    e_invalid_user EXCEPTION;
+    e_invalid_vehicle EXCEPTION;
+BEGIN
+    SELECT id INTO v_pickup_location_id FROM locations WHERE name = pi_pickup_location_name;
+    SELECT id INTO v_dropoff_location_id FROM locations WHERE name = pi_dropoff_location_name;
+    SELECT id INTO v_insurance_type_id FROM insurance_types WHERE lower(name) LIKE lower(pi_insurance_type_name);
+    SELECT id INTO v_user_id FROM users WHERE fname = pi_user_name;
+    SELECT id INTO v_vehicle_id FROM vehicles WHERE registration_id = pi_vehicle_registration_id;
+
+    IF v_pickup_location_id IS NULL OR v_dropoff_location_id IS NULL THEN
+        RAISE e_invalid_location;
+    END IF;
+
+    IF v_insurance_type_id IS NULL THEN
+        RAISE e_invalid_insurance;
+    END IF;
+
+    IF v_user_id IS NULL THEN
+        RAISE e_invalid_user;
+    END IF;
+
+    IF v_vehicle_id IS NULL THEN
+        RAISE e_invalid_vehicle;
+    END IF;
+
+    INSERT INTO reservations (
+        id,
+        status,
+        charge,
+        pickup_date,
+        dropoff_date,
+        insurance_id,
+        pickup_location_id,
+        dropoff_location_id,
+        passenger_count,
+        vehicles_id,
+        users_id,
+        insurance_types_id
+    ) VALUES (
+        reservations_seq.nextval,
+        pi_status,
+        pi_charge,
+        TO_DATE(pi_pickup_date, 'YYYY-MM-DD'),
+        TO_DATE(pi_dropoff_date, 'YYYY-MM-DD'),
+        pi_insurance_id,
+        v_pickup_location_id,
+        v_dropoff_location_id,
+        pi_passenger_count,
+        v_vehicle_id,
+        v_user_id,
+        v_insurance_type_id
+    );
+
+    DBMS_OUTPUT.PUT_LINE('Reservation added');
+    COMMIT;
+
+EXCEPTION
+    WHEN e_invalid_location THEN
+        DBMS_OUTPUT.PUT_LINE('Invalid pickup or dropoff location');
+    WHEN e_invalid_insurance THEN
+        DBMS_OUTPUT.PUT_LINE('Invalid insurance type');
+    WHEN e_invalid_user THEN
+        DBMS_OUTPUT.PUT_LINE('Invalid user');
+    WHEN e_invalid_vehicle THEN
+        DBMS_OUTPUT.PUT_LINE('Invalid vehicle');
+    WHEN OTHERS THEN
+        RAISE;
+        COMMIT;
+
+END add_reservation;
+/
+
+
 
 
 -- Add locations
@@ -655,3 +749,10 @@ EXEC add_payment_method('1234876539081234','true', '2024-01-31','186','1 kev St,
 EXEC add_payment_method('1234567890123456','true', '2027-12-31','123','1 kev St, New York, USA','Abigail');
 EXEC add_payment_method('7432738484381812','true', '2026-03-31','354','34 Main St, Boston, USA','Cat');
 EXEC add_payment_method('6363712392387232','true', '2027-10-31','154','123 Main St, Boston, USA','Cat');
+
+-- Add reservations
+EXEC add_reservation('pending',100.00,'2023-12-01','2023-12-10','SA001','New York','Boston', 2,'ARK678NEW7908OOP','Abigail','star all');
+EXEC add_reservation('active',200.00,'2023-12-02','2023-12-11','TS012','New York','Boston', 4,'NYE345MID0456OOP','Abigail','travel shield');
+EXEC add_reservation('completed',300.00,'2023-01-01','2023-01-10','SF004','New York','Boston', 2,'NYE345MID0456OOP','Abigail','safety first');
+EXEC add_reservation('active',350.00,'2023-12-01','2023-12-12','CF001','New York','Boston', 6,'NYE678MID4056OOP','Abigail','care first');
+EXEC add_reservation('cancelled',110.00,'2024-11-01','2023-11-10','SF034','New York','Boston', 2,'ARK678NEW7908OOP','Abigail','safety first');
