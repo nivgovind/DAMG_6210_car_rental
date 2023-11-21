@@ -78,3 +78,18 @@ CREATE TABLE insurance_types (
     name     VARCHAR2(100) NOT NULL,
     CONSTRAINT insurance_types_pk PRIMARY KEY (id)
 );
+
+CREATE TABLE users (
+    id                 NUMBER DEFAULT users_seq.nextval NOT NULL,
+    role               VARCHAR2(10) NOT NULL,
+    fname              VARCHAR2(100) NOT NULL,
+    lname              VARCHAR2(100),
+    current_location_id NUMBER,
+    driver_license   VARCHAR2(20),
+    age              NUMBER,
+    company_name     VARCHAR2(100),
+    tax_id           VARCHAR2(20),
+    CONSTRAINT users_pk PRIMARY KEY (id),
+    CONSTRAINT users_locations_fk FOREIGN KEY (current_location_id)
+        REFERENCES locations(id)
+);
