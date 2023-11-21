@@ -404,6 +404,105 @@ EXCEPTION
 END add_user;
 /
 
+-- Procedure for adding vehicles
+CREATE OR REPLACE PROCEDURE add_vehicle (
+    pi_hourly_rate NUMBER,
+    pi_miles_driven NUMBER,
+    pi_availability_status VARCHAR2,
+    pi_passenger_capacity NUMBER,
+    pi_registration_id VARCHAR,
+    pi_location_name VARCHAR,
+    pi_user_name VARCHAR,
+    pi_make VARCHAR
+
+) AS
+    v_reg_count NUMBER;
+    v_status NUMBER;
+    v_location_id vehicle_types.id%TYPE;
+    v_vendor_id users.id%TYPE;
+    v_vehicle_type_id vehicles.id%TYPE;
+    e_unique_reg_id EXCEPTION;
+    e_invalid_reg_id EXCEPTION;
+    e_invalid_ref EXCEPTION;
+    e_invalid_pger_count EXCEPTION;
+    e_invalid_data EXCEPTION;
+
+BEGIN
+    SELECT COUNT(*) INTO v_reg_count FROM vehicles WHERE registration_id = pi_registration_id;
+
+    IF pi_availability_status = 'true' THEN
+        v_status := 1;
+    ELSIF pi_availability_status = 'false' THEN
+        v_status := 0;
+    ELSE
+        RAISE e_invalid_data;
+    END IF;
+    
+    IF v_reg_count != 0 THEN
+        RAISE e_unique_reg_id;
+    END IF;
+    
+    IF pi_passenger_capacity > 10 THEN
+        RAISE e_invalid_pger_count;
+    END IF;
+
+    IF LENGTH(pi_registration_id) != 16 THEN
+        raise e_invalid_reg_id;
+    END IF;
+
+    SELECT id
+        INTO v_location_id
+        FROM locations
+        WHERE name = pi_location_name;
+
+    SELECT id
+        INTO v_vendor_id
+        FROM users
+        WHERE fname = pi_user_name;
+    
+    SELECT id
+        INTO v_vehicle_type_id
+        FROM vehicle_types
+        WHERE model = pi_make;
+
+    IF v_vendor_id IS NULL OR v_vehicle_type_id IS NULL OR v_location_id IS NULL THEN
+        raise e_invalid_ref;
+    END IF;
+
+    INSERT INTO vehicles
+        VALUES(
+            vehicles_seq.nextval,
+            pi_hourly_rate,
+            pi_miles_driven,
+            v_status,
+            pi_passenger_capacity,
+            pi_registration_id,
+            v_location_id,
+            v_vendor_id,
+            v_vehicle_type_id
+        );
+    
+    DBMS_OUTPUT.PUT_LINE(pi_registration_id || ' vehicle added');
+    COMMIT;
+
+EXCEPTION
+    WHEN e_unique_reg_id THEN
+        DBMS_OUTPUT.PUT_LINE(pi_registration_id || 'already exists');
+    WHEN e_invalid_reg_id THEN
+        DBMS_OUTPUT.PUT_LINE(pi_registration_id || 'is invalid');
+    WHEN e_invalid_ref THEN
+        DBMS_OUTPUT.PUT_LINE('References does not exist');
+    WHEN e_invalid_pger_count THEN
+        DBMS_OUTPUT.PUT_LINE(pi_passenger_capacity || 'is invalid');
+    WHEN e_invalid_data THEN
+        DBMS_OUTPUT.PUT_LINE('Data is invalid');
+    WHEN OTHERS THEN
+        RAISE;
+        COMMIT;
+
+END add_vehicle;
+/
+
 
 -- Add locations
 exec add_location('New York');
@@ -476,3 +575,9 @@ EXEC add_user('customer', 'Abigail', 'Gring', 'New York', 'DL12345678901234', 25
 EXEC add_user('vendor', 'Bob', 'Cat', 'Los Angeles', NULL, NULL, 'BobCat rentals', 'TaxID1234567890123');
 EXEC add_user('customer', 'Cat', 'Stevens', 'Boston', 'DL98765432109876', 30, NULL, NULL);
 EXEC add_user('vendor', 'Dina', 'Jones', 'Minneapolis', NULL, NULL, 'New Old rentals', 'TaxID8765432109876');
+
+-- Add vehicles
+EXEC add_vehicle(25.00, 5000, 'true', 5, 'BOS123NE0W456OOP', 'New York', 'Bob', 'silverado')
+EXEC add_vehicle(40.00, 5000, 'true', 5, 'NYE345MID0456OOP', 'New York', 'Dina', 'mustang')
+EXEC add_vehicle(50.00, 5000, 'true', 5, 'NYE678MID4056OOP', 'New York', 'Dina', 'camaro')
+EXEC add_vehicle(30.00, 5000, 'true', 5, 'ARK678NEW7908OOP', 'New York', 'Bob', 'fiesta')
