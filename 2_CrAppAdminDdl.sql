@@ -200,3 +200,24 @@ EXCEPTION
 
 END add_location;
 /
+
+-- Add locations
+exec add_location('New York');
+exec add_location('Los Angeles');
+exec add_location('Chicago');
+exec add_location('Houston');
+exec add_location('Miami');
+exec add_location('San Francisco');
+exec add_location('Seattle');
+exec add_location('Denver');
+exec add_location('Atlanta');
+exec add_location('Dallas');
+exec add_location('Phoenix');
+exec add_location('Boston');
+exec add_location('Las Vegas');
+exec add_location('Orlando');
+exec add_location('Portland');
+exec add_location('Austin');
+exec add_location('Nashville');
+exec add_location('San Diego');
+exec add_location('Minneapolis');
