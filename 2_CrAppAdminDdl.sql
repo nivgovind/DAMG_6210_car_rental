@@ -63,3 +63,11 @@ CREATE TABLE vehicle_types (
     fuel_type         VARCHAR2(20) NOT NULL,
     CONSTRAINT vehicle_types_pk PRIMARY KEY (id)
 );
+
+CREATE TABLE discount_types (
+    id              NUMBER DEFAULT discount_types_seq.nextval NOT NULL,
+    code            VARCHAR2(10) NOT NULL,
+    discount_amount NUMBER(7,2) NOT NULL,
+    min_eligible_charge NUMBER(7,2) NOT NULL,
+    CONSTRAINT discount_types_pk PRIMARY KEY (id)
+);
