@@ -777,30 +777,36 @@ exec add_vehicle_type('toyota', 'corolla', 'manual', 'sedan', 'gasoline');
 exec add_vehicle_type('ford', 'fusion', 'automatic', 'sedan', 'hybrid');
 exec add_vehicle_type('chevrolet', 'malibu', 'automatic', 'sedan', 'gasoline');
 exec add_vehicle_type('nissan', 'sentra', 'cvt', 'sedan', 'petrol');
+exec add_vehicle_type('mercedes', 'cla', 'automatic', 'sedan', 'petrol');
 -- SUV
 exec add_vehicle_type('jeep', 'cherokee', 'automatic', 'suv', 'gasoline');
 exec add_vehicle_type('honda', 'cr-v', 'cvt', 'suv', 'petrol');
 exec add_vehicle_type('toyota', 'highlander', 'automatic', 'suv', 'hybrid');
 exec add_vehicle_type('subaru', 'outback', 'automatic', 'suv', 'gasoline');
 exec add_vehicle_type('ford', 'explorer', 'automatic', 'suv', 'petrol');
+exec add_vehicle_type('mercedes', 'wrangler', 'automatic', 'suv', 'petrol');
 -- Truck
 exec add_vehicle_type('chevrolet', 'silverado', 'automatic', 'truck', 'diesel');
 exec add_vehicle_type('ford', 'f-250', 'automatic', 'truck', 'gasoline');
 exec add_vehicle_type('ram', '1500', 'automatic', 'truck', 'diesel');
 exec add_vehicle_type('toyota', 'tundra', 'automatic', 'truck', 'gasoline');
 exec add_vehicle_type('nissan', 'titan', 'automatic', 'truck', 'petrol');
+exec add_vehicle_type('hummer', 'h1', 'automatic', 'truck', 'petrol');
 -- Hatchback
 exec add_vehicle_type('volkswagen', 'golf', 'manual', 'hatchback', 'petrol');
 exec add_vehicle_type('ford', 'fiesta', 'automatic', 'hatchback', 'gasoline');
 exec add_vehicle_type('honda', 'fit', 'cvt', 'hatchback', 'petrol');
 exec add_vehicle_type('toyota', 'yaris', 'manual', 'hatchback', 'petrol');
 exec add_vehicle_type('mazda', 'mazda3', 'automatic', 'hatchback', 'gasoline');
+exec add_vehicle_type('chevrolet', 'bolt', 'automatic', 'hatchback', 'gasoline');
 -- Convertible
 exec add_vehicle_type('ford', 'mustang', 'automatic', 'convertible', 'petrol');
 exec add_vehicle_type('chevrolet', 'camaro', 'manual', 'convertible', 'petrol');
 exec add_vehicle_type('bmw', '4 series', 'automatic', 'convertible', 'petrol');
 exec add_vehicle_type('mazda', 'mx-5 miata', 'manual', 'convertible', 'gasoline');
 exec add_vehicle_type('audi', 'a3 cabriolet', 'automatic', 'convertible', 'petrol');
+exec add_vehicle_type('mercedes', 'slk 350', 'automatic', 'convertible', 'petrol');
+
 
 -- Add discount types
 EXEC add_discount_type('FIRST', 5.00, 10.00);
@@ -814,24 +820,30 @@ EXEC add_insurance_type('star all', 2000);
 EXEC add_insurance_type('safety first', 5000);
 EXEC add_insurance_type('travel shield', 3000);
 EXEC add_insurance_type('care first', 1000);
+EXEC add_insurance_type('cruise protection', 6000);
 
 -- Add users
 EXEC add_user('customer', 'Abigail', 'Gring', 'New York', 'DL12345678901234', 25, NULL, NULL);
 EXEC add_user('vendor', 'Bob', 'Cat', 'Los Angeles', NULL, NULL, 'BobCat rentals', 'TaxID1234567890123');
 EXEC add_user('customer', 'Cat', 'Stevens', 'Boston', 'DL98765432109876', 30, NULL, NULL);
 EXEC add_user('vendor', 'Dina', 'Jones', 'Minneapolis', NULL, NULL, 'New Old rentals', 'TaxID8765432109876');
+EXEC add_user('vendor', 'Lewis', 'Hamilton', 'Quincy', NULL, NULL, 'Merc Rentals', 'TaxID8765432102375');
 
 -- Add vehicles
 EXEC add_vehicle(25.00, 5000, 'true', 5, 'BOS123NE0W456OOP', 'New York', 'Bob', 'silverado')
 EXEC add_vehicle(40.00, 5000, 'true', 5, 'NYE345MID0456OOP', 'New York', 'Dina', 'mustang')
 EXEC add_vehicle(50.00, 5000, 'true', 5, 'NYE678MID4056OOP', 'New York', 'Dina', 'camaro')
 EXEC add_vehicle(30.00, 5000, 'true', 5, 'ARK678NEW7908OOP', 'New York', 'Bob', 'fiesta')
+EXEC add_vehicle(40.00, 5000, 'true', 5, 'ARK678NEW790900Q', 'New York', 'Lewis', 'fiesta')
+
 
 -- Add payment methods
 EXEC add_payment_method('1234876539081234','true', '2024-01-31','186','1 kev St, New York, USA','Abigail');
 EXEC add_payment_method('1234567890123456','true', '2027-12-31','123','1 kev St, New York, USA','Abigail');
 EXEC add_payment_method('7432738484381812','true', '2026-03-31','354','34 Main St, Boston, USA','Cat');
 EXEC add_payment_method('6363712392387232','true', '2027-10-31','154','123 Main St, Boston, USA','Cat');
+EXEC add_payment_method('6363712392387545','true', '2027-07-31','645','63 Kevin St, Boston, USA','Cat');
+
 
 -- Add reservations
 EXEC add_reservation('pending',100.00,'2023-12-01','2023-12-10','SA001','New York','Boston', 2,'ARK678NEW7908OOP','Abigail','star all');
@@ -845,3 +857,4 @@ EXEC add_payment_transaction('completed', 100.00, 'VAR300com', 1, '1234876539081
 EXEC add_payment_transaction('completed', 200.00, 'WERE200', 2, '1234876539081234', 'NEW2024');
 EXEC add_payment_transaction('completed', 300.00, 'COMP20', 3, '1234876539081234', 'FIRST');
 EXEC add_payment_transaction('completed', 350.00, 'COP20we', 4, '1234876539081234', 'NO_DISC');
+EXEC add_payment_transaction('completed', 450.00, 'COMP24', 5, '1234876539081234', 'NEW2023');
