@@ -827,14 +827,12 @@ EXEC add_user('customer', 'Abigail', 'Gring', 'New York', 'DL12345678901234', 25
 EXEC add_user('vendor', 'Bob', 'Cat', 'Los Angeles', NULL, NULL, 'BobCat rentals', 'TaxID1234567890123');
 EXEC add_user('customer', 'Cat', 'Stevens', 'Boston', 'DL98765432109876', 30, NULL, NULL);
 EXEC add_user('vendor', 'Dina', 'Jones', 'Minneapolis', NULL, NULL, 'New Old rentals', 'TaxID8765432109876');
-EXEC add_user('vendor', 'Lewis', 'Hamilton', 'Quincy', NULL, NULL, 'Merc Rentals', 'TaxID8765432102375');
 
 -- Add vehicles
 EXEC add_vehicle(25.00, 5000, 'true', 5, 'BOS123NE0W456OOP', 'New York', 'Bob', 'silverado')
 EXEC add_vehicle(40.00, 5000, 'true', 5, 'NYE345MID0456OOP', 'New York', 'Dina', 'mustang')
 EXEC add_vehicle(50.00, 5000, 'true', 5, 'NYE678MID4056OOP', 'New York', 'Dina', 'camaro')
 EXEC add_vehicle(30.00, 5000, 'true', 5, 'ARK678NEW7908OOP', 'New York', 'Bob', 'fiesta')
-EXEC add_vehicle(40.00, 5000, 'true', 5, 'ARK678NEW790900Q', 'New York', 'Lewis', 'fiesta')
 
 
 -- Add payment methods
@@ -842,8 +840,6 @@ EXEC add_payment_method('1234876539081234','true', '2024-01-31','186','1 kev St,
 EXEC add_payment_method('1234567890123456','true', '2027-12-31','123','1 kev St, New York, USA','Abigail');
 EXEC add_payment_method('7432738484381812','true', '2026-03-31','354','34 Main St, Boston, USA','Cat');
 EXEC add_payment_method('6363712392387232','true', '2027-10-31','154','123 Main St, Boston, USA','Cat');
-EXEC add_payment_method('6363712392387545','true', '2027-07-31','645','63 Kevin St, Boston, USA','Cat');
-
 
 -- Add reservations
 EXEC add_reservation('pending',100.00,'2023-12-01','2023-12-10','SA001','New York','Boston', 2,'ARK678NEW7908OOP','Abigail','star all');
@@ -857,4 +853,3 @@ EXEC add_payment_transaction('completed', 100.00, 'VAR300com', 1, '1234876539081
 EXEC add_payment_transaction('completed', 200.00, 'WERE200', 2, '1234876539081234', 'NEW2024');
 EXEC add_payment_transaction('completed', 300.00, 'COMP20', 3, '1234876539081234', 'FIRST');
 EXEC add_payment_transaction('completed', 350.00, 'COP20we', 4, '1234876539081234', 'NO_DISC');
-EXEC add_payment_transaction('completed', 450.00, 'COMP24', 5, '1234876539081234', 'NEW2023');
