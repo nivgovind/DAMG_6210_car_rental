@@ -308,80 +308,6 @@ EXCEPTION
 END add_insurance_type;
 /
 
--- Update insurance type
-CREATE OR REPLACE PROCEDURE update_insurance_type (
-    pi_insurance_type_name VARCHAR2,
-    pi_new_coverage NUMBER
-) AS
-    v_insurance_type_id insurance_types.id%TYPE;
-    e_not_found EXCEPTION;
-BEGIN
-    -- Find the insurance type ID based on the name
-    SELECT id INTO v_insurance_type_id
-    FROM insurance_types
-    WHERE lower(name) LIKE lower(pi_insurance_type_name);
-
-    -- Check if the insurance type exists
-    IF v_insurance_type_id IS NOT NULL THEN
-        -- Update the coverage amount
-        UPDATE insurance_types
-        SET coverage = pi_new_coverage
-        WHERE id = v_insurance_type_id;
-
-        DBMS_OUTPUT.PUT_LINE('Insurance type ' || pi_insurance_type_name || ' updated with new coverage: ' || pi_new_coverage);
-    ELSE
-        RAISE e_not_found;
-    END IF;
-
-    COMMIT;
-
-EXCEPTION
-    WHEN e_not_found THEN
-        DBMS_OUTPUT.PUT_LINE(pi_insurance_type_name || 'does not exist');
-    WHEN OTHERS THEN
-        RAISE;
-        ROLLBACK;
-
-END update_insurance_type;
-/
-
--- View: insurance analytics (count of reservations for each and total revenue from each)
-CREATE OR REPLACE VIEW view_insurance_res_rev AS
-SELECT
-    it.id AS insurance_type_id,
-    it.name AS insurance_type_name,
-    COUNT(r.id) AS reservation_count,
-    NVL(SUM(pt.amount), 0) AS total_revenue
-FROM
-    reservations r 
-LEFT JOIN
-    insurance_types it ON r.insurance_types_id = it.id
-LEFT JOIN
-    (SELECT * FROM payment_transactions WHERE status = 1) pt ON r.id = pt.reservations_id
-GROUP BY
-    it.id, it.name;
-
--- view: Insurance analytics (top performing insurance type by vehicle type) (note:rank over)
-CREATE OR REPLACE VIEW view_insurance_top_performer AS
-SELECT
-    v.make,
-    v.model,
-    it.name AS insurance_type_name,
-    COUNT(r.id) AS reservation_count
-FROM reservations r
-JOIN insurance_types it ON r.insurance_types_id = it.id
-JOIN (
-        SELECT tv.id as id, tvtp.make, tvtp.model 
-        FROM vehicles tv 
-        JOIN vehicle_types tvtp 
-            ON tv.vehicle_type_id = tvtp.id
-    ) v ON r.vehicles_id = v.id
-GROUP BY
-    v.make,
-    v.model,
-    it.name
-ORDER BY
-    COUNT(r.id) DESC;
 
 -- Procedure for adding users
 CREATE OR REPLACE PROCEDURE add_user (
@@ -822,8 +748,171 @@ EXCEPTION
 END add_payment_transaction;
 /
 
+-- Update procedures
+
+-- Update insurance type (available to insurnace analust)
+CREATE OR REPLACE PROCEDURE update_insurance_type (
+    pi_insurance_type_name VARCHAR2,
+    pi_new_coverage NUMBER
+) AS
+    v_insurance_type_id insurance_types.id%TYPE;
+    e_not_found EXCEPTION;
+BEGIN
+    -- Find the insurance type ID based on the name
+    SELECT id INTO v_insurance_type_id
+    FROM insurance_types
+    WHERE lower(name) LIKE lower(pi_insurance_type_name);
+
+    -- Check if the insurance type exists
+    IF v_insurance_type_id IS NOT NULL THEN
+        -- Update the coverage amount
+        UPDATE insurance_types
+        SET coverage = pi_new_coverage
+        WHERE id = v_insurance_type_id;
+
+        DBMS_OUTPUT.PUT_LINE('Insurance type ' || pi_insurance_type_name || ' updated with new coverage: ' || pi_new_coverage);
+    ELSE
+        RAISE e_not_found;
+    END IF;
+
+    COMMIT;
+
+EXCEPTION
+    WHEN e_not_found THEN
+        DBMS_OUTPUT.PUT_LINE(pi_insurance_type_name || 'does not exist');
+    WHEN OTHERS THEN
+        RAISE;
+        ROLLBACK;
+
+END update_insurance_type;
+/
 
 
+
+-- Views
+
+-- View: insurance analytics (count of reservations for each and total revenue from each)
+CREATE OR REPLACE VIEW view_insurance_res_rev AS
+SELECT
+    it.id AS insurance_type_id,
+    it.name AS insurance_type_name,
+    COUNT(r.id) AS reservation_count,
+    NVL(SUM(pt.amount), 0) AS total_revenue
+FROM
+    reservations r 
+LEFT JOIN
+    insurance_types it ON r.insurance_types_id = it.id
+LEFT JOIN
+    (SELECT * FROM payment_transactions WHERE status = 1) pt ON r.id = pt.reservations_id
+GROUP BY
+    it.id, it.name;
+
+
+-- view: Insurance analytics (top performing insurance type by vehicle type) (note:rank over)
+CREATE OR REPLACE VIEW view_insurance_top_performer AS
+SELECT
+    v.make,
+    v.model,
+    it.name AS insurance_type_name,
+    COUNT(r.id) AS reservation_count
+FROM reservations r
+JOIN insurance_types it ON r.insurance_types_id = it.id
+JOIN (
+        SELECT tv.id as id, tvtp.make, tvtp.model 
+        FROM vehicles tv 
+        JOIN vehicle_types tvtp 
+            ON tv.vehicle_type_id = tvtp.id
+    ) v ON r.vehicles_id = v.id
+GROUP BY
+    v.make,
+    v.model,
+    it.name
+ORDER BY
+    COUNT(r.id) DESC;
+
+
+-- View: Analytics rental frequency and revenue by vehicle type
+CREATE OR REPLACE VIEW rentals_and_revenue_by_vehicle_type AS
+SELECT
+    vt.id AS vehicle_type_id,
+    vt.make AS make,
+    vt.model AS model,
+    COUNT(r.id) AS number_of_rentals,
+    NVL(SUM(pt.amount), 0) AS total_revenue
+FROM
+    vehicle_types vt
+LEFT JOIN
+    vehicles v ON vt.id = v.vehicle_type_id
+LEFT JOIN
+    reservations r ON v.id = r.vehicles_id
+LEFT JOIN
+    payment_transactions pt ON r.id = pt.reservations_id
+GROUP BY
+    vt.id, vt.make, vt.model
+ORDER BY
+    NVL(SUM(pt.amount), 0) DESC, COUNT(r.id) DESC;
+
+
+-- View: no of rentals and revenue by vendor
+CREATE OR REPLACE VIEW rentals_revenue_by_vendor AS
+SELECT 
+    u.fname || ' ' || u.lname AS vendor_name,
+    count(r.id) as no_of_rentals,
+    NVL(SUM(r.charge), 0) AS total_revenue
+FROM reservations r
+join vehicles v on r.vehicles_id = v.id
+join users u on v.users_id = u.id   
+group by u.fname, u.lname
+order by count(r.id) desc, NVL(SUM(r.charge), 0) desc;
+
+
+-- View: revenue by demographic (10 years age range)
+CREATE OR REPLACE VIEW revenue_by_demographic AS
+SELECT
+    FLOOR((u.age - 1) / 10) * 10 AS age_range_start,
+    FLOOR((u.age - 1) / 10) * 10 + 9 AS age_range_end,
+    COUNT(r.id) AS reservation_count,
+    SUM(pt.amount) AS total_revenue
+FROM
+    reservations r
+JOIN
+    users u ON r.users_id = u.id
+JOIN
+    (select * from payment_transactions where STATUS = 1) pt ON r.id = pt.reservations_id
+GROUP BY
+    FLOOR((u.age - 1) / 10) * 10, FLOOR((u.age - 1) / 10) * 10 + 9
+ORDER BY
+    COUNT(r.id) DESC, SUM(pt.amount) DESC;
+
+-- View: revenue by user’s location
+CREATE OR REPLACE VIEW revenue_by_location_view AS
+SELECT
+    l.name,
+    NVL(SUM(vt.amount), 0) AS revenue
+FROM
+    (
+        SELECT
+            pt.reservations_id AS id,
+            r.pickup_location_id AS location_id,
+            pt.amount AS amount
+        FROM
+            payment_transactions pt
+        JOIN
+            reservations r ON pt.reservations_id = r.id
+        WHERE
+            pt.status = 1
+            AND r.status = 'completed'
+    ) vt
+JOIN
+    locations l ON vt.location_id = l.id
+GROUP BY
+    l.name
+ORDER BY
+    NVL(SUM(vt.amount), 0) DESC;
+
+
+
+-- Add data
 -- Add locations
 exec add_location('New York');
 exec add_location('Los Angeles');

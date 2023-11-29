@@ -20,24 +20,44 @@ Vehicles will be marked unavailable once the reservation is active.
 
 ### Insurance analyst
 - [ ] Add more data under first two points
-- [ ] Procedure: create insurance type - done
-`add_insurance_type (pi_name VARCHAR2, pi_coverage NUMBER)`
+- [x] Procedure: create insurance type
+```
+add_insurance_type (pi_name VARCHAR2, pi_coverage NUMBER)
+```
 
-- [ ] Procedure: update existing insurance type - done
-`update_insurance_type (pi_insurance_type_name VARCHAR2, pi_new_coverage NUMBER)`
+- [x] Procedure: update existing insurance type
+```
+update_insurance_type (pi_insurance_type_name VARCHAR2, pi_new_coverage NUMBER);
+```
 
-- [ ] View: insurance analytics (count of reservations for each and total revenue from each)
-`select * from view_insurance_res_rev;`
+- [x] View: insurance analytics (count of reservations for each and total revenue from each)
+```
+select * from view_insurance_res_rev;
+```
 
-
-- [ ] View: Insurance analytics (top performing insurance type by vehicle type)
-`select * from view_insurance_top_performer;`
+- [x] View: Insurance analytics (top performing insurance type by vehicle type)
+```
+select * from view_insurance_top_performer;
+```
 
 ### App analyst
-- [ ] View: no of rentals and revenue by vendor
-- [ ] View: revenue by demographic (10 years age range)
+- [x] View: No of rentals and revenue by vehicle type
+```
+select * from rentals_and_revenue_by_vehicle_type;
+```
+- [x] View: no of rentals and revenue by vendor
+```
+select * from rentals_revenue_by_vendor;
+```
+- [x] View: revenue by demographic (10 years age range)
+```
+select * from revenue_by_demographic;
+```
 - [ ] View: No of rentals and revenue by vehicle type
-- [ ] View: revenue by user’s location (10 years age range)
+- [x] View: revenue by user’s location
+```
+select * from revenue_by_location_view;
+```
 - [ ] View: no of rentals by discount_type
 - [ ] View: total booking last week
 
