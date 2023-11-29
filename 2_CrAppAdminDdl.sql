@@ -361,6 +361,27 @@ LEFT JOIN
 GROUP BY
     it.id, it.name;
 
+-- view: Insurance analytics (top performing insurance type by vehicle type) (note:rank over)
+CREATE OR REPLACE VIEW view_insurance_top_performer AS
+SELECT
+    v.make,
+    v.model,
+    it.name AS insurance_type_name,
+    COUNT(r.id) AS reservation_count
+FROM reservations r
+JOIN insurance_types it ON r.insurance_types_id = it.id
+JOIN (
+        SELECT tv.id as id, tvtp.make, tvtp.model 
+        FROM vehicles tv 
+        JOIN vehicle_types tvtp 
+            ON tv.vehicle_type_id = tvtp.id
+    ) v ON r.vehicles_id = v.id
+GROUP BY
+    v.make,
+    v.model,
+    it.name
+ORDER BY
+    COUNT(r.id) DESC;
 
 -- Procedure for adding users
 CREATE OR REPLACE PROCEDURE add_user (
