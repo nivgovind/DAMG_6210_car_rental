@@ -45,6 +45,10 @@ select * from view_insurance_top_performer;
 ```
 select * from rentals_and_revenue_by_vehicle_type;
 ```
+- [x] View: no of rentals and revenue by vendor
+```
+select * from rentals_revenue_by_vendor;
+```
 - [x] View: revenue by demographic (10 years age range)
 ```
 select * from revenue_by_demographic;
