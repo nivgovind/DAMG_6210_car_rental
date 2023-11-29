@@ -308,80 +308,6 @@ EXCEPTION
 END add_insurance_type;
 /
 
--- Update insurance type
-CREATE OR REPLACE PROCEDURE update_insurance_type (
-    pi_insurance_type_name VARCHAR2,
-    pi_new_coverage NUMBER
-) AS
-    v_insurance_type_id insurance_types.id%TYPE;
-    e_not_found EXCEPTION;
-BEGIN
-    -- Find the insurance type ID based on the name
-    SELECT id INTO v_insurance_type_id
-    FROM insurance_types
-    WHERE lower(name) LIKE lower(pi_insurance_type_name);
-
-    -- Check if the insurance type exists
-    IF v_insurance_type_id IS NOT NULL THEN
-        -- Update the coverage amount
-        UPDATE insurance_types
-        SET coverage = pi_new_coverage
-        WHERE id = v_insurance_type_id;
-
-        DBMS_OUTPUT.PUT_LINE('Insurance type ' || pi_insurance_type_name || ' updated with new coverage: ' || pi_new_coverage);
-    ELSE
-        RAISE e_not_found;
-    END IF;
-
-    COMMIT;
-
-EXCEPTION
-    WHEN e_not_found THEN
-        DBMS_OUTPUT.PUT_LINE(pi_insurance_type_name || 'does not exist');
-    WHEN OTHERS THEN
-        RAISE;
-        ROLLBACK;
-
-END update_insurance_type;
-/
-
--- View: insurance analytics (count of reservations for each and total revenue from each)
-CREATE OR REPLACE VIEW view_insurance_res_rev AS
-SELECT
-    it.id AS insurance_type_id,
-    it.name AS insurance_type_name,
-    COUNT(r.id) AS reservation_count,
-    NVL(SUM(pt.amount), 0) AS total_revenue
-FROM
-    reservations r 
-LEFT JOIN
-    insurance_types it ON r.insurance_types_id = it.id
-LEFT JOIN
-    (SELECT * FROM payment_transactions WHERE status = 1) pt ON r.id = pt.reservations_id
-GROUP BY
-    it.id, it.name;
-
--- view: Insurance analytics (top performing insurance type by vehicle type) (note:rank over)
-CREATE OR REPLACE VIEW view_insurance_top_performer AS
-SELECT
-    v.make,
-    v.model,
-    it.name AS insurance_type_name,
-    COUNT(r.id) AS reservation_count
-FROM reservations r
-JOIN insurance_types it ON r.insurance_types_id = it.id
-JOIN (
-        SELECT tv.id as id, tvtp.make, tvtp.model 
-        FROM vehicles tv 
-        JOIN vehicle_types tvtp 
-            ON tv.vehicle_type_id = tvtp.id
-    ) v ON r.vehicles_id = v.id
-GROUP BY
-    v.make,
-    v.model,
-    it.name
-ORDER BY
-    COUNT(r.id) DESC;
 
 -- Procedure for adding users
 CREATE OR REPLACE PROCEDURE add_user (
@@ -822,8 +748,89 @@ EXCEPTION
 END add_payment_transaction;
 /
 
+-- Update procedures
+
+-- Update insurance type (available to insurnace analust)
+CREATE OR REPLACE PROCEDURE update_insurance_type (
+    pi_insurance_type_name VARCHAR2,
+    pi_new_coverage NUMBER
+) AS
+    v_insurance_type_id insurance_types.id%TYPE;
+    e_not_found EXCEPTION;
+BEGIN
+    -- Find the insurance type ID based on the name
+    SELECT id INTO v_insurance_type_id
+    FROM insurance_types
+    WHERE lower(name) LIKE lower(pi_insurance_type_name);
+
+    -- Check if the insurance type exists
+    IF v_insurance_type_id IS NOT NULL THEN
+        -- Update the coverage amount
+        UPDATE insurance_types
+        SET coverage = pi_new_coverage
+        WHERE id = v_insurance_type_id;
+
+        DBMS_OUTPUT.PUT_LINE('Insurance type ' || pi_insurance_type_name || ' updated with new coverage: ' || pi_new_coverage);
+    ELSE
+        RAISE e_not_found;
+    END IF;
+
+    COMMIT;
+
+EXCEPTION
+    WHEN e_not_found THEN
+        DBMS_OUTPUT.PUT_LINE(pi_insurance_type_name || 'does not exist');
+    WHEN OTHERS THEN
+        RAISE;
+        ROLLBACK;
+
+END update_insurance_type;
+/
 
 
+
+-- Views
+
+-- View: insurance analytics (count of reservations for each and total revenue from each)
+CREATE OR REPLACE VIEW view_insurance_res_rev AS
+SELECT
+    it.id AS insurance_type_id,
+    it.name AS insurance_type_name,
+    COUNT(r.id) AS reservation_count,
+    NVL(SUM(pt.amount), 0) AS total_revenue
+FROM
+    reservations r 
+LEFT JOIN
+    insurance_types it ON r.insurance_types_id = it.id
+LEFT JOIN
+    (SELECT * FROM payment_transactions WHERE status = 1) pt ON r.id = pt.reservations_id
+GROUP BY
+    it.id, it.name;
+
+
+-- view: Insurance analytics (top performing insurance type by vehicle type) (note:rank over)
+CREATE OR REPLACE VIEW view_insurance_top_performer AS
+SELECT
+    v.make,
+    v.model,
+    it.name AS insurance_type_name,
+    COUNT(r.id) AS reservation_count
+FROM reservations r
+JOIN insurance_types it ON r.insurance_types_id = it.id
+JOIN (
+        SELECT tv.id as id, tvtp.make, tvtp.model 
+        FROM vehicles tv 
+        JOIN vehicle_types tvtp 
+            ON tv.vehicle_type_id = tvtp.id
+    ) v ON r.vehicles_id = v.id
+GROUP BY
+    v.make,
+    v.model,
+    it.name
+ORDER BY
+    COUNT(r.id) DESC;
+
+-- Add data
 -- Add locations
 exec add_location('New York');
 exec add_location('Los Angeles');
