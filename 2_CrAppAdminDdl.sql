@@ -853,23 +853,23 @@ ORDER BY
     NVL(SUM(pt.amount), 0) DESC, COUNT(r.id) DESC;
 
 -- View: no of rentals and revenue by vendor
-CREATE OR REPLACE VIEW rentals_revenue_by_vendor AS
-SELECT
-    u.fname || ' ' || u.lname AS vendor_name,
-    COUNT(v.id) AS number_of_vehicles,
-    COUNT(r.id) AS number_of_rentals,
-    NVL(SUM(pt.amount), 0) AS total_revenue
-FROM
-    users u
-    LEFT JOIN vehicles v ON u.id = v.users_id
-    LEFT JOIN (select * from reservations where status = 'completed') r ON v.id = r.vehicles_id
-    LEFT JOIN (select * from payment_transactions where STATUS = 1) pt ON r.id = pt.reservations_id
-WHERE
-    u.role = 'vendor'
-GROUP BY
-    u.fname, u.lname
-ORDER BY
-    COUNT(v.id), COUNT(r.id) DESC, NVL(SUM(pt.amount), 0) DESC;
+-- CREATE OR REPLACE VIEW rentals_revenue_by_vendor AS
+-- SELECT
+--     u.fname || ' ' || u.lname AS vendor_name,
+--     COUNT(v.id) AS number_of_vehicles,
+--     COUNT(r.id) AS number_of_rentals,
+--     NVL(SUM(pt.amount), 0) AS total_revenue
+-- FROM
+--     users u
+--     LEFT JOIN vehicles v ON u.id = v.users_id
+--     LEFT JOIN (select * from reservations where status = 'completed') r ON v.id = r.vehicles_id
+--     LEFT JOIN (select * from payment_transactions where STATUS = 1) pt ON r.id = pt.reservations_id
+-- WHERE
+--     u.role = 'vendor'
+-- GROUP BY
+--     u.fname, u.lname
+-- ORDER BY
+--     COUNT(v.id), COUNT(r.id) DESC, NVL(SUM(pt.amount), 0) DESC;
 
 
 -- View: revenue by demographic (10 years age range)
@@ -880,15 +880,43 @@ SELECT
     COUNT(r.id) AS reservation_count,
     SUM(pt.amount) AS total_revenue
 FROM
-    users u
+    reservations r
 JOIN
-    reservations r ON u.id = r.users_id
+    users u ON r.users_id = u.id
 JOIN
-    payment_transactions pt ON r.id = pt.reservations_id
+    (select * from payment_transactions where STATUS = 1) pt ON r.id = pt.reservations_id
 GROUP BY
     FLOOR((u.age - 1) / 10) * 10, FLOOR((u.age - 1) / 10) * 10 + 9
 ORDER BY
     COUNT(r.id) DESC, SUM(pt.amount) DESC;
+
+-- View: revenue by user’s location
+CREATE OR REPLACE VIEW revenue_by_location_view AS
+SELECT
+    l.name,
+    NVL(SUM(vt.amount), 0) AS revenue
+FROM
+    (
+        SELECT
+            pt.reservations_id AS id,
+            r.pickup_location_id AS location_id,
+            pt.amount AS amount
+        FROM
+            payment_transactions pt
+        JOIN
+            reservations r ON pt.reservations_id = r.id
+        WHERE
+            pt.status = 1
+            AND r.status = 'completed'
+    ) vt
+JOIN
+    locations l ON vt.location_id = l.id
+GROUP BY
+    l.name
+ORDER BY
+    NVL(SUM(vt.amount), 0) DESC;
+
+
 
 -- Add data
 -- Add locations
