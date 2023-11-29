@@ -308,6 +308,81 @@ EXCEPTION
 END add_insurance_type;
 /
 
+-- Update insurance type
+CREATE OR REPLACE PROCEDURE update_insurance_type (
+    pi_insurance_type_name VARCHAR2,
+    pi_new_coverage NUMBER
+) AS
+    v_insurance_type_id insurance_types.id%TYPE;
+    e_not_found EXCEPTION;
+BEGIN
+    -- Find the insurance type ID based on the name
+    SELECT id INTO v_insurance_type_id
+    FROM insurance_types
+    WHERE lower(name) LIKE lower(pi_insurance_type_name);
+
+    -- Check if the insurance type exists
+    IF v_insurance_type_id IS NOT NULL THEN
+        -- Update the coverage amount
+        UPDATE insurance_types
+        SET coverage = pi_new_coverage
+        WHERE id = v_insurance_type_id;
+
+        DBMS_OUTPUT.PUT_LINE('Insurance type ' || pi_insurance_type_name || ' updated with new coverage: ' || pi_new_coverage);
+    ELSE
+        RAISE e_not_found;
+    END IF;
+
+    COMMIT;
+
+EXCEPTION
+    WHEN e_not_found THEN
+        DBMS_OUTPUT.PUT_LINE(pi_insurance_type_name || 'does not exist');
+    WHEN OTHERS THEN
+        RAISE;
+        ROLLBACK;
+
+END update_insurance_type;
+/
+
+-- View: insurance analytics (count of reservations for each and total revenue from each)
+CREATE OR REPLACE VIEW view_insurance_res_rev AS
+SELECT
+    it.id AS insurance_type_id,
+    it.name AS insurance_type_name,
+    COUNT(r.id) AS reservation_count,
+    NVL(SUM(pt.amount), 0) AS total_revenue
+FROM
+    reservations r 
+LEFT JOIN
+    insurance_types it ON r.insurance_types_id = it.id
+LEFT JOIN
+    (SELECT * FROM payment_transactions WHERE status = 1) pt ON r.id = pt.reservations_id
+GROUP BY
+    it.id, it.name;
+
+-- view: Insurance analytics (top performing insurance type by vehicle type) (note:rank over)
+CREATE OR REPLACE VIEW view_insurance_top_performer AS
+SELECT
+    v.make,
+    v.model,
+    it.name AS insurance_type_name,
+    COUNT(r.id) AS reservation_count
+FROM reservations r
+JOIN insurance_types it ON r.insurance_types_id = it.id
+JOIN (
+        SELECT tv.id as id, tvtp.make, tvtp.model 
+        FROM vehicles tv 
+        JOIN vehicle_types tvtp 
+            ON tv.vehicle_type_id = tvtp.id
+    ) v ON r.vehicles_id = v.id
+GROUP BY
+    v.make,
+    v.model,
+    it.name
+ORDER BY
+    COUNT(r.id) DESC;
+
 -- Procedure for adding users
 CREATE OR REPLACE PROCEDURE add_user (
     pi_role VARCHAR2,
@@ -844,9 +919,12 @@ EXEC add_payment_method('6363712392387232','true', '2027-10-31','154','123 Main 
 -- Add reservations
 EXEC add_reservation('pending',100.00,'2023-12-01','2023-12-10','SA001','New York','Boston', 2,'ARK678NEW7908OOP','Abigail','star all');
 EXEC add_reservation('active',200.00,'2023-12-02','2023-12-11','TS012','New York','Boston', 4,'NYE345MID0456OOP','Abigail','travel shield');
-EXEC add_reservation('completed',300.00,'2023-01-01','2023-01-10','SF004','New York','Boston', 2,'NYE345MID0456OOP','Abigail','safety first');
-EXEC add_reservation('active',350.00,'2023-12-01','2023-12-12','CF001','New York','Boston', 6,'NYE678MID4056OOP','Abigail','care first');
+EXEC add_reservation('completed',300.00,'2023-01-01','2023-01-10','SF004','New York','Boston', 2,'NYE345MID0456OOP','Cat','safety first');
+EXEC add_reservation('active',350.00,'2023-12-01','2023-12-12','CF001','New York','Boston', 6,'NYE678MID4056OOP','Cat','care first');
 EXEC add_reservation('cancelled',110.00,'2024-11-01','2023-11-10','SF034','New York','Boston', 2,'ARK678NEW7908OOP','Abigail','safety first');
+EXEC add_reservation('active',200.00,'2023-05-11','2023-05-14','TS012','New York','Boston', 4,'NYE345MID0456OOP','Abigail','travel shield');
+EXEC add_reservation('completed',300.00,'2023-03-20','2023-04-10','SF004','New York','Boston', 2,'NYE345MID0456OOP','Cat','safety first');
+EXEC add_reservation('active',350.00,'2023-12-01','2023-12-12','CF001','New York','Boston', 6,'NYE678MID4056OOP','Cat','care first');
 
 -- Add Payment transactions
 EXEC add_payment_transaction('completed', 100.00, 'VAR300com', 1, '1234876539081234', 'WONDER10');
