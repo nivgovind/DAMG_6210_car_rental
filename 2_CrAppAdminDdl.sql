@@ -830,6 +830,29 @@ GROUP BY
 ORDER BY
     COUNT(r.id) DESC;
 
+
+-- View: Analytics rental frequency and revenue by vehicle type
+CREATE OR REPLACE VIEW rentals_and_revenue_by_vehicle_type AS
+SELECT
+    vt.id AS vehicle_type_id,
+    vt.make AS make,
+    vt.model AS model,
+    COUNT(r.id) AS number_of_rentals,
+    NVL(SUM(pt.amount), 0) AS total_revenue
+FROM
+    vehicle_types vt
+LEFT JOIN
+    vehicles v ON vt.id = v.vehicle_type_id
+LEFT JOIN
+    reservations r ON v.id = r.vehicles_id
+LEFT JOIN
+    payment_transactions pt ON r.id = pt.reservations_id
+GROUP BY
+    vt.id, vt.make, vt.model
+ORDER BY
+    NVL(SUM(pt.amount), 0) DESC, COUNT(r.id) DESC;
+
+
 -- Add data
 -- Add locations
 exec add_location('New York');
