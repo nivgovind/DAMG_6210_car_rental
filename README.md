@@ -20,10 +20,10 @@ Vehicles will be marked unavailable once the reservation is active.
 
 ### Insurance analyst
 - [ ] Add more data under first two points
-- [ ] Procedure: create insurance type - done
+- [ ] Procedure: create insurance type
 `add_insurance_type (pi_name VARCHAR2, pi_coverage NUMBER)`
 
-- [ ] Procedure: update existing insurance type - done
+- [ ] Procedure: update existing insurance type
 `update_insurance_type (pi_insurance_type_name VARCHAR2, pi_new_coverage NUMBER)`
 
 - [ ] View: insurance analytics (count of reservations for each and total revenue from each)
