@@ -852,24 +852,18 @@ GROUP BY
 ORDER BY
     NVL(SUM(pt.amount), 0) DESC, COUNT(r.id) DESC;
 
+
 -- View: no of rentals and revenue by vendor
--- CREATE OR REPLACE VIEW rentals_revenue_by_vendor AS
--- SELECT
---     u.fname || ' ' || u.lname AS vendor_name,
---     COUNT(v.id) AS number_of_vehicles,
---     COUNT(r.id) AS number_of_rentals,
---     NVL(SUM(pt.amount), 0) AS total_revenue
--- FROM
---     users u
---     LEFT JOIN vehicles v ON u.id = v.users_id
---     LEFT JOIN (select * from reservations where status = 'completed') r ON v.id = r.vehicles_id
---     LEFT JOIN (select * from payment_transactions where STATUS = 1) pt ON r.id = pt.reservations_id
--- WHERE
---     u.role = 'vendor'
--- GROUP BY
---     u.fname, u.lname
--- ORDER BY
---     COUNT(v.id), COUNT(r.id) DESC, NVL(SUM(pt.amount), 0) DESC;
+CREATE OR REPLACE VIEW rentals_revenue_by_vendor AS
+SELECT 
+    u.fname || ' ' || u.lname AS vendor_name,
+    count(r.id) as no_of_rentals,
+    NVL(SUM(r.charge), 0) AS total_revenue
+FROM reservations r
+join vehicles v on r.vehicles_id = v.id
+join users u on v.users_id = u.id   
+group by u.fname, u.lname
+order by count(r.id) desc, NVL(SUM(r.charge), 0) desc;
 
 
 -- View: revenue by demographic (10 years age range)
