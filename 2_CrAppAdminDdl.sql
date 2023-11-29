@@ -308,6 +308,44 @@ EXCEPTION
 END add_insurance_type;
 /
 
+-- Update insurance type
+CREATE OR REPLACE PROCEDURE update_insurance_type (
+    pi_insurance_type_name VARCHAR2,
+    pi_new_coverage NUMBER
+) AS
+    v_insurance_type_id insurance_types.id%TYPE;
+    e_not_found EXCEPTION;
+BEGIN
+    -- Find the insurance type ID based on the name
+    SELECT id INTO v_insurance_type_id
+    FROM insurance_types
+    WHERE lower(name) LIKE lower(pi_insurance_type_name);
+
+    -- Check if the insurance type exists
+    IF v_insurance_type_id IS NOT NULL THEN
+        -- Update the coverage amount
+        UPDATE insurance_types
+        SET coverage = pi_new_coverage
+        WHERE id = v_insurance_type_id;
+
+        DBMS_OUTPUT.PUT_LINE('Insurance type ' || pi_insurance_type_name || ' updated with new coverage: ' || pi_new_coverage);
+    ELSE
+        RAISE e_not_found;
+    END IF;
+
+    COMMIT;
+
+EXCEPTION
+    WHEN e_unique_code THEN
+        DBMS_OUTPUT.PUT_LINE(pi_insurance_type_name || 'does not exist');
+    WHEN OTHERS THEN
+        RAISE;
+        ROLLBACK;
+
+END update_insurance_type;
+/
+
+
 -- Procedure for adding users
 CREATE OR REPLACE PROCEDURE add_user (
     pi_role VARCHAR2,
