@@ -852,6 +852,23 @@ GROUP BY
 ORDER BY
     NVL(SUM(pt.amount), 0) DESC, COUNT(r.id) DESC;
 
+-- View: revenue by demographic (10 years age range)
+CREATE OR REPLACE VIEW revenue_by_demographic AS
+SELECT
+    FLOOR((u.age - 1) / 10) * 10 AS age_range_start,
+    FLOOR((u.age - 1) / 10) * 10 + 9 AS age_range_end,
+    COUNT(r.id) AS reservation_count,
+    SUM(pt.amount) AS total_revenue
+FROM
+    users u
+JOIN
+    reservations r ON u.id = r.users_id
+JOIN
+    payment_transactions pt ON r.id = pt.reservations_id
+GROUP BY
+    FLOOR((u.age - 1) / 10) * 10, FLOOR((u.age - 1) / 10) * 10 + 9
+ORDER BY
+    COUNT(r.id) DESC, SUM(pt.amount) DESC;
 
 -- Add data
 -- Add locations

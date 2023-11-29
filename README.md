@@ -41,11 +41,14 @@ select * from view_insurance_top_performer;
 ```
 
 ### App analyst
-- [ ] View: no of rentals and revenue by vendor
+- [x] View: no of rentals and revenue by vendor
 ```
 select * from rentals_and_revenue_by_vehicle_type;
 ```
-- [ ] View: revenue by demographic (10 years age range)
+- [x] View: revenue by demographic (10 years age range)
+```
+select * from revenue_by_demographic;
+```
 - [ ] View: No of rentals and revenue by vehicle type
 - [ ] View: revenue by user’s location (10 years age range)
 - [ ] View: no of rentals by discount_type
