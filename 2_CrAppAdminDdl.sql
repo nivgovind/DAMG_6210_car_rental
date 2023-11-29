@@ -336,7 +336,7 @@ BEGIN
     COMMIT;
 
 EXCEPTION
-    WHEN e_unique_code THEN
+    WHEN e_not_found THEN
         DBMS_OUTPUT.PUT_LINE(pi_insurance_type_name || 'does not exist');
     WHEN OTHERS THEN
         RAISE;
@@ -344,6 +344,22 @@ EXCEPTION
 
 END update_insurance_type;
 /
+
+-- View: insurance analytics (count of reservations for each and total revenue from each)
+CREATE OR REPLACE VIEW view_insurance_res_rev AS
+SELECT
+    it.id AS insurance_type_id,
+    it.name AS insurance_type_name,
+    COUNT(r.id) AS reservation_count,
+    NVL(SUM(pt.amount), 0) AS total_revenue
+FROM
+    reservations r 
+LEFT JOIN
+    insurance_types it ON r.insurance_types_id = it.id
+LEFT JOIN
+    (SELECT * FROM payment_transactions WHERE status = 1) pt ON r.id = pt.reservations_id
+GROUP BY
+    it.id, it.name;
 
 
 -- Procedure for adding users
@@ -882,9 +898,12 @@ EXEC add_payment_method('6363712392387232','true', '2027-10-31','154','123 Main 
 -- Add reservations
 EXEC add_reservation('pending',100.00,'2023-12-01','2023-12-10','SA001','New York','Boston', 2,'ARK678NEW7908OOP','Abigail','star all');
 EXEC add_reservation('active',200.00,'2023-12-02','2023-12-11','TS012','New York','Boston', 4,'NYE345MID0456OOP','Abigail','travel shield');
-EXEC add_reservation('completed',300.00,'2023-01-01','2023-01-10','SF004','New York','Boston', 2,'NYE345MID0456OOP','Abigail','safety first');
-EXEC add_reservation('active',350.00,'2023-12-01','2023-12-12','CF001','New York','Boston', 6,'NYE678MID4056OOP','Abigail','care first');
+EXEC add_reservation('completed',300.00,'2023-01-01','2023-01-10','SF004','New York','Boston', 2,'NYE345MID0456OOP','Cat','safety first');
+EXEC add_reservation('active',350.00,'2023-12-01','2023-12-12','CF001','New York','Boston', 6,'NYE678MID4056OOP','Cat','care first');
 EXEC add_reservation('cancelled',110.00,'2024-11-01','2023-11-10','SF034','New York','Boston', 2,'ARK678NEW7908OOP','Abigail','safety first');
+EXEC add_reservation('active',200.00,'2023-05-11','2023-05-14','TS012','New York','Boston', 4,'NYE345MID0456OOP','Abigail','travel shield');
+EXEC add_reservation('completed',300.00,'2023-03-20','2023-04-10','SF004','New York','Boston', 2,'NYE345MID0456OOP','Cat','safety first');
+EXEC add_reservation('active',350.00,'2023-12-01','2023-12-12','CF001','New York','Boston', 6,'NYE678MID4056OOP','Cat','care first');
 
 -- Add Payment transactions
 EXEC add_payment_transaction('completed', 100.00, 'VAR300com', 1, '1234876539081234', 'WONDER10');
