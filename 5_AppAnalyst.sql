@@ -9,3 +9,9 @@ select * from revenue_by_demographic;
 
 -- View: revenue by user’s location
 select * from revenue_by_location_view;
+
+-- View: no of rentals by discount_type
+select * from view_rentals_by_discount_type;
+
+-- View: total booking last week
+select * from view_total_booking_last_week;

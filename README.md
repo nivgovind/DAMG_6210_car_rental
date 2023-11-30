@@ -53,14 +53,18 @@ select * from rentals_revenue_by_vendor;
 ```
 select * from revenue_by_demographic;
 ```
-- [ ] View: No of rentals and revenue by vehicle type
 - [x] View: revenue by user’s location
 ```
 select * from revenue_by_location_view;
 ```
-- [ ] View: no of rentals by discount_type
-- [ ] View: total booking last week
-
+- [x] View: no of rentals by discount_type
+```
+select * from view_rentals_by_discount_type;
+```
+- [x] View: total booking last week
+```
+select * from view_total_booking_last_week;
+```
 ### Customer
 - [ ] View: all available cars in said location (note: reduce location data)
 - [ ] Procedure: Initiate a booking / Update a booking

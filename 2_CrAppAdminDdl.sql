@@ -910,7 +910,21 @@ GROUP BY
 ORDER BY
     NVL(SUM(vt.amount), 0) DESC;
 
+-- View: no of rentals by discount_type
+create view view_rentals_by_discount_type as
+select dt.code, count(r.id) as reservation_frequency
+from reservations r
+join payment_transactions pt on r.id = pt.reservations_id
+join discount_types dt on pt.discount_types_id = dt.id
+group by dt.code
+order by count(r.id) desc;
 
+-- View: total booking last week
+create view view_total_booking_last_week as
+select * 
+from reservations
+where pickup_date >= sysdate - 7
+order by pickup_date desc;
 
 -- Add data
 -- Add locations
