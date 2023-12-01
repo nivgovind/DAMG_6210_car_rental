@@ -1184,6 +1184,7 @@ FOR EACH ROW
 BEGIN
     IF :NEW.dropoff_date < SYSDATE AND :NEW.status != 'completed' THEN
         :NEW.status := 'cancelled';
+        DBMS_OUTPUT.PUT_LINE('Reservation ' || :NEW.id || ' updated status: cancelled by trigger.');
     END IF;
 END;
 /
