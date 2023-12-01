@@ -1442,7 +1442,29 @@ BEGIN
 END;
 /
 
-Procedure: Display rental history
+create or replace view cust_rental_history as
+SELECT
+    r.id as id,
+    u.id as user_id,
+    u.fname || ' ' || u.lname AS customer_name,
+    vt.make || '-' || vt.model AS car_name,
+    r.pickup_date,
+    r.dropoff_date,
+    r.charge
+FROM
+    reservations r
+JOIN
+    users u ON r.users_id = u.id
+JOIN
+    vehicles ON r.vehicles_id = vehicles.id
+JOIN
+    vehicle_types vt ON vehicles.vehicle_type_id = vt.id
+WHERE
+    r.status = 'completed'
+ORDER BY
+    u.fname || ' ' || u.lname, r.pickup_date DESC;
+
+-- Procedure: Display rental history
 CREATE OR REPLACE PROCEDURE get_user_reservations_history(user_id IN NUMBER) AS
     l_reservations SYS_REFCURSOR;
     r_reservation cust_rental_history%ROWTYPE;
