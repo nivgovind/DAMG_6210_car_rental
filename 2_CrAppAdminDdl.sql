@@ -910,7 +910,300 @@ GROUP BY
 ORDER BY
     NVL(SUM(vt.amount), 0) DESC;
 
+-- View: no of rentals by discount_type
+CREATE OR REPLACE VIEW view_rentals_by_discount_type as
+select dt.code, count(r.id) as reservation_frequency
+from reservations r
+join payment_transactions pt on r.id = pt.reservations_id
+join discount_types dt on pt.discount_types_id = dt.id
+group by dt.code
+order by count(r.id) desc;
 
+-- View: total booking last week
+CREATE OR REPLACE VIEW view_total_booking_last_week as
+select * 
+from reservations
+where pickup_date >= sysdate - 7
+order by pickup_date desc;
+
+-- View: all available cars
+CREATE OR REPLACE VIEW view_all_available_cars as
+select * 
+from vehicles 
+where id not in (
+    select vehicles_id from reservations where status = 'active'
+);
+
+-- view all rental history
+create or replace view view_all_rental_history as
+SELECT
+    r.id as id,
+    u.id as user_id,
+    u.fname || ' ' || u.lname AS customer_name,
+    vt.make || '-' || vt.model AS car_name,
+    r.pickup_date,
+    r.dropoff_date,
+    r.charge
+FROM
+    reservations r
+JOIN
+    users u ON r.users_id = u.id
+JOIN
+    vehicles ON r.vehicles_id = vehicles.id
+JOIN
+    vehicle_types vt ON vehicles.vehicle_type_id = vt.id
+WHERE
+    r.status = 'completed'
+ORDER BY
+    u.fname || ' ' || u.lname, r.pickup_date DESC;
+
+-- Procedure: Initiate a booking / Update a booking
+
+-- Procedure: Cancel a booking (should happen only if reservation isn't active yet)
+CREATE OR REPLACE PROCEDURE cancel_reservation (
+    pi_reservation_id IN NUMBER
+) AS
+    v_reservation_status VARCHAR2(10);
+
+    -- Exceptions
+    e_booking_not_found EXCEPTION;
+    e_invalid_reservation_state EXCEPTION;
+
+BEGIN
+    -- Check if the reservation ID exists
+    SELECT status
+    INTO v_reservation_status
+    FROM reservations
+    WHERE id = pi_reservation_id;
+
+    -- Exception: Booking ID not found
+    IF v_reservation_status IS NULL THEN
+        RAISE e_booking_not_found;
+    END IF;
+
+    -- Exception: Booking ID found but not in pending state
+    IF v_reservation_status != 'pending' THEN
+        RAISE e_invalid_reservation_state;
+    END IF;
+
+    -- Update the reservation status to canceled
+    UPDATE reservations
+    SET status = 'cancelled'
+    WHERE id = pi_reservation_id;
+
+    DBMS_OUTPUT.PUT_LINE('Reservation ' || pi_reservation_id || ' has been cancelled.');
+    COMMIT;
+
+EXCEPTION
+    WHEN e_booking_not_found THEN
+        DBMS_OUTPUT.PUT_LINE('Error: Reservation ID not found.');
+    WHEN e_invalid_reservation_state THEN
+        DBMS_OUTPUT.PUT_LINE('Error: Reservation is not in pending state.');
+    WHEN OTHERS THEN
+        RAISE;
+        ROLLBACK;
+END cancel_reservation;
+/
+
+-- Procedure: Add a payment method / Update a payment method
+-- Procedure: View payment methods
+-- Procedure: delete payment methods
+-- Procedure: initiate payment transactions
+CREATE OR REPLACE PROCEDURE initiate_payment_transaction (
+    pi_reservation_id IN NUMBER,
+    pi_card_number    IN VARCHAR2,
+    pi_discount_code  IN VARCHAR2 DEFAULT NULL
+) AS
+    v_reservation_status reservations.status%TYPE;
+    v_amount             reservations.charge%TYPE;
+    v_discount_amount    discount_types.discount_amount%TYPE;
+    v_payment_status     payment_transactions.status%TYPE;
+    v_payment_method_id  payment_methods.id%TYPE;
+    v_discount_type_id   discount_types.id%TYPE;
+    v_users_id           reservations.users_id%TYPE;
+    v_pm_users_id        payment_methods.users_id%TYPE;
+    e_reservation_not_found     EXCEPTION;
+    e_payment_method_not_found  EXCEPTION;
+    e_invalid_discount_code     EXCEPTION;
+    e_invalid_reservation_state EXCEPTION;
+    e_invalid_discount_amount   EXCEPTION;
+    e_invalid_data              EXCEPTION;
+
+BEGIN
+    -- Check if the reservation ID exists
+    SELECT status, charge, users_id
+    INTO v_reservation_status, v_amount, v_users_id
+    FROM reservations
+    WHERE id = pi_reservation_id;
+
+    -- Exception: Reservation ID not found
+    IF v_reservation_status IS NULL THEN
+        RAISE e_reservation_not_found;
+    END IF;
+
+    -- Check if the reservation status is 'active'
+    IF v_reservation_status != 'active' THEN
+        RAISE e_invalid_reservation_state;
+    END IF;
+
+    -- Check if the payment method exists
+    SELECT id, active_status, users_id
+    INTO v_payment_method_id, v_payment_status, v_pm_users_id
+    FROM payment_methods
+    WHERE card_number = pi_card_number;
+
+    -- Exception: Payment method not found
+    IF v_payment_method_id IS NULL THEN
+        RAISE e_payment_method_not_found;
+    END IF;
+
+    -- Exception: Payment method is not active
+    IF v_payment_status != 1 OR v_pm_users_id != v_users_id THEN
+        RAISE e_invalid_data;
+    END IF;
+
+    -- Check if a discount code is provided
+    IF pi_discount_code IS NOT NULL THEN
+        -- Check if the discount code exists
+        SELECT id, discount_amount
+        INTO v_discount_type_id, v_discount_amount
+        FROM discount_types
+        WHERE code = pi_discount_code;
+
+        -- Exception: Invalid discount code
+        IF v_discount_type_id IS NULL THEN
+            RAISE e_invalid_discount_code;
+        END IF;
+
+        -- Exception: Discount amount is negative
+        IF v_discount_amount < 0 THEN
+            RAISE e_invalid_discount_amount;
+        END IF;
+    END IF;
+
+    -- Insert payment transaction record
+    INSERT INTO payment_transactions (
+        id,
+        status,
+        amount,
+        approval_code,
+        reservations_id,
+        payment_methods_id,
+        discount_types_id
+    ) VALUES (
+        payment_transactions_seq.nextval,
+        0, -- Pending status
+        v_amount - NVL(v_discount_amount, 0), -- Apply discount if available
+        NULL,
+        pi_reservation_id,
+        v_payment_method_id,
+        v_discount_type_id
+    );
+
+    DBMS_OUTPUT.PUT_LINE('Payment transaction initiated for Reservation ID: ' || pi_reservation_id || 'payment_id:' || payment_transactions_seq.currval);
+    COMMIT;
+
+EXCEPTION
+    WHEN e_reservation_not_found THEN
+        DBMS_OUTPUT.PUT_LINE('Error: Reservation ID not found.');
+    WHEN e_payment_method_not_found THEN
+        DBMS_OUTPUT.PUT_LINE('Error: Payment method not found.');
+    WHEN e_invalid_discount_code THEN
+        DBMS_OUTPUT.PUT_LINE('Error: Invalid discount code.');
+    WHEN e_invalid_reservation_state THEN
+        DBMS_OUTPUT.PUT_LINE('Error: Reservation is not in active state.');
+    WHEN e_invalid_discount_amount THEN
+        DBMS_OUTPUT.PUT_LINE('Error: Invalid discount amount.');
+    WHEN e_invalid_data THEN
+        DBMS_OUTPUT.PUT_LINE('Error: Invalid data.');
+    WHEN OTHERS THEN
+        RAISE;
+        ROLLBACK;
+END initiate_payment_transaction;
+/
+
+-- Procedure: approve payment transactions
+CREATE OR REPLACE PROCEDURE approve_transaction (
+    pi_reservation_id IN NUMBER
+) AS
+    v_approval_code VARCHAR2(16);
+BEGIN
+    -- Generate a random 16-character approval code
+    v_approval_code := DBMS_RANDOM.STRING('A', 16);
+
+    -- Update payment transaction record with the approval code and set status to approved
+    UPDATE payment_transactions
+    SET status = 1, -- Set status to approved
+        approval_code = v_approval_code
+    WHERE reservations_id = pi_reservation_id and approval_code IS NULL;
+
+    DBMS_OUTPUT.PUT_LINE('Transaction Approved. Approval Code: ' || v_approval_code);
+    COMMIT;
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('Error: Transaction ID not found.');
+    WHEN OTHERS THEN
+        RAISE;
+        ROLLBACK;
+END approve_transaction;
+/
+
+-- Function: Retrieve rental records for a user
+CREATE OR REPLACE FUNCTION get_user_completed_reservations(user_id IN NUMBER)
+RETURN SYS_REFCURSOR
+AS
+    c_reservations SYS_REFCURSOR;
+BEGIN
+    OPEN c_reservations FOR
+        SELECT
+            r.id as id,
+            u.id as user_id,
+            u.fname || ' ' || u.lname AS customer_name,
+            vt.make || '-' || vt.model AS car_name,
+            r.pickup_date,
+            r.dropoff_date,
+            r.charge
+        FROM
+            reservations r
+        JOIN
+            users u ON r.users_id = u.id
+        JOIN
+            vehicles ON r.vehicles_id = vehicles.id
+        JOIN
+            vehicle_types vt ON vehicles.vehicle_type_id = vt.id
+        WHERE
+            r.status = 'completed' and u.id = user_id
+        ORDER BY
+            u.fname || ' ' || u.lname, r.pickup_date DESC;
+    RETURN c_reservations;
+END;
+/
+
+-- Procedure: Display rental history
+CREATE OR REPLACE PROCEDURE get_user_reservations_history(user_id IN NUMBER) AS
+    l_reservations SYS_REFCURSOR;
+    r_reservation cust_rental_history%ROWTYPE;
+BEGIN
+    l_reservations := get_user_completed_reservations(user_id);
+    LOOP
+        BEGIN
+            FETCH l_reservations INTO r_reservation;
+            EXIT WHEN l_reservations%NOTFOUND;
+            DBMS_OUTPUT.PUT_LINE(r_reservation.id || ', ' || r_reservation.customer_name || ', ' || r_reservation.car_name || ', ' || r_reservation.pickup_date || ', ' || r_reservation.dropoff_date || ', ' || r_reservation.charge);
+        EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+                DBMS_OUTPUT.PUT_LINE('No reservations found.');
+            WHEN OTHERS THEN
+                DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
+        END;
+    END LOOP;
+    CLOSE l_reservations;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
+END;
+/
 
 -- Add data
 -- Add locations
@@ -1020,3 +1313,17 @@ EXEC add_payment_transaction('completed', 100.00, 'VAR300com', 1, '1234876539081
 EXEC add_payment_transaction('completed', 200.00, 'WERE200', 2, '1234876539081234', 'NEW2024');
 EXEC add_payment_transaction('completed', 300.00, 'COMP20', 3, '1234876539081234', 'FIRST');
 EXEC add_payment_transaction('completed', 350.00, 'COP20we', 4, '1234876539081234', 'NO_DISC');
+
+
+-- Update expired reservations to cancelled
+CREATE OR REPLACE TRIGGER trg_update_expired_reservations
+BEFORE INSERT OR UPDATE ON reservations
+FOR EACH ROW
+BEGIN
+    IF :NEW.dropoff_date < SYSDATE AND :NEW.status != 'completed' THEN
+        :NEW.status := 'cancelled';
+        DBMS_OUTPUT.PUT_LINE('Reservation ' || :NEW.id || ' updated status: cancelled by trigger.');
+    END IF;
+END;
+/
+

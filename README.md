@@ -53,27 +53,64 @@ select * from rentals_revenue_by_vendor;
 ```
 select * from revenue_by_demographic;
 ```
-- [ ] View: No of rentals and revenue by vehicle type
 - [x] View: revenue by user’s location
 ```
 select * from revenue_by_location_view;
 ```
-- [ ] View: no of rentals by discount_type
-- [ ] View: total booking last week
-
+- [x] View: no of rentals by discount_type
+```
+select * from view_rentals_by_discount_type;
+```
+- [x] View: total booking last week
+```
+select * from view_total_booking_last_week;
+```
 ### Customer
-- [ ] View: all available cars in said location (note: reduce location data)
-- [ ] Procedure: Initiate a booking / Update a booking
-- [ ] Procedure: Cancel a booking (should happen only if reservation isn't active yet)
+- [x] View: all available cars
+```
+select * from view_all_available_cars;
+```
+- [ ] Procedure: Initiate a complete booking (reservation with successful payment)
+```
+
+```
+- [x] Procedure: Cancel a booking (should happen only if reservation isn't active yet)
+```
+EXEC cancel_reservation(RESERVATION_ID as number);
+```
 - [ ] Procedure: Add a payment method / Update a payment method
 - [ ] Procedure: View payment methods
 - [ ] Procedure: delete payment methods
-- [ ] Procedure: initiate payment transactions
-- [ ] Procedure: Update profile
-- [ ] View: rental history
+- [x] Procedure: initiate payment transactions
+```
+-- initiate
+EXEC initiate_payment_transaction (pi_reservation_id IN NUMBER, pi_card_number IN VARCHAR2, pi_discount_code  IN VARCHAR2 DEFAULT NULL);
+
+--approve
+approve_transaction (pi_reservation_id IN NUMBER);
+```
+- [x] View: rental history
+```
+-- all history
+select * from view_all_rental_history;
+
+-- history by a user
+EXEC get_user_reservations_history(user_id as number);
+```
 
 ### Vendor (saurabh)
 - [ ] Add/update a new car
 - [ ] View rental history (niv)
 - [ ] View all cars
 - [ ] View customers who has rented his cars 
+
+
+## Functions , triggers
+- retrieve rental records for a user
+```
+EXEC get_user_completed_reservations(user_id IN NUMBER);
+```
+- update expired reservation status
+```
+trg_update_expired_reservations
+```
