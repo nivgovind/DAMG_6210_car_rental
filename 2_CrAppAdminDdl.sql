@@ -1557,7 +1557,6 @@ EXCEPTION
 end update_car_availability;
 /
 
--- vendor reservations
 CREATE OR REPLACE FUNCTION get_vendor_reservations(vendor_id IN NUMBER)
 RETURN SYS_REFCURSOR
 AS
@@ -1582,7 +1581,7 @@ BEGIN
         JOIN
             vehicle_types vt ON vhc.vehicle_type_id = vt.id
         WHERE
-            vhc.users_id = 4
+            vhc.users_id = vendor_id
         ORDER BY
             u.fname || ' ' || u.lname, r.pickup_date DESC;
     RETURN c_reservations;
@@ -1629,6 +1628,79 @@ BEGIN
         END;
     END LOOP;
     CLOSE l_reservations;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
+END;
+/
+
+-- Function: Get vendor vehicles
+CREATE OR REPLACE FUNCTION get_vendor_vehicles(vendor_id IN NUMBER)
+RETURN SYS_REFCURSOR
+AS
+    c_vehicles SYS_REFCURSOR;
+BEGIN
+    OPEN c_vehicles FOR
+        SELECT
+            vhc.id,
+            vt.make || '-' || vt.model AS car_name,
+            vhc.passenger_capacity,
+            vhc.availability_status,
+            vt.category,
+            vt.fuel_type
+        FROM
+            vehicles vhc
+        JOIN
+            vehicle_types vt ON vhc.vehicle_type_id = vt.id
+        JOIN
+            users u ON vhc.users_id = u.id
+        WHERE
+            vhc.users_id = vendor_id;
+    RETURN c_vehicles;
+END;
+/
+
+-- View: All vendor vehicles
+create or replace view all_vendor_vehicles as
+SELECT
+    vhc.id,
+    vt.make || '-' || vt.model AS car_name,
+    vhc.passenger_capacity,
+    vhc.availability_status,
+    vt.category,
+    vt.fuel_type
+FROM
+    vehicles vhc
+JOIN
+    vehicle_types vt ON vhc.vehicle_type_id = vt.id
+JOIN
+    users u ON vhc.users_id = u.id;
+
+-- Procedure: Display vendor vehicles
+CREATE OR REPLACE PROCEDURE get_vendor_vehicle_list(vendor_id IN NUMBER) AS
+    l_vehicles SYS_REFCURSOR;
+    v_avail_status VARCHAR2(20);
+    r_vehicles all_vendor_vehicles%ROWTYPE;
+BEGIN
+    l_vehicles := get_vendor_vehicles(vendor_id);
+    LOOP
+        BEGIN
+            FETCH l_vehicles INTO r_vehicles;
+            EXIT WHEN l_vehicles%NOTFOUND;
+            IF r_vehicles.availability_status = 1 THEN
+                v_avail_status := 'Available';
+            ELSE
+                v_avail_status := 'Not Available';
+            END IF;
+            DBMS_OUTPUT.PUT_LINE(r_vehicles.id || ', ' || r_vehicles.car_name || ', ' || r_vehicles.passenger_capacity || ', ' || v_avail_status || ', ' || r_vehicles.category || ', ' || r_vehicles.fuel_type);
+        EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+                DBMS_OUTPUT.PUT_LINE('No vehicles found.');
+            WHEN OTHERS THEN
+                DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
+        END;
+    END LOOP;
+    CLOSE l_vehicles;
 EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
