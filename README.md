@@ -66,18 +66,34 @@ select * from view_rentals_by_discount_type;
 select * from view_total_booking_last_week;
 ```
 ### Customer
-- [ ] View: all available cars in said location (note: reduce location data)
+- [x] View: all available cars
+```
+select * from view_all_available_cars;
+```
 - [ ] Procedure: Initiate a booking / Update a booking
 - [ ] Procedure: Cancel a booking (should happen only if reservation isn't active yet)
 - [ ] Procedure: Add a payment method / Update a payment method
 - [ ] Procedure: View payment methods
 - [ ] Procedure: delete payment methods
 - [ ] Procedure: initiate payment transactions
-- [ ] Procedure: Update profile
-- [ ] View: rental history
+- [x] View: rental history
+```
+-- all history
+select * from view_all_rental_history;
+
+-- history by a user
+EXEC get_user_reservations_history(user_id as number);
+```
 
 ### Vendor (saurabh)
 - [ ] Add/update a new car
 - [ ] View rental history (niv)
 - [ ] View all cars
 - [ ] View customers who has rented his cars 
+
+
+## Functions
+- retrieve rental records for a user
+```
+get_user_completed_reservations(user_id IN NUMBER)
+```

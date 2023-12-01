@@ -911,7 +911,7 @@ ORDER BY
     NVL(SUM(vt.amount), 0) DESC;
 
 -- View: no of rentals by discount_type
-create view view_rentals_by_discount_type as
+CREATE OR REPLACE VIEW view_rentals_by_discount_type as
 select dt.code, count(r.id) as reservation_frequency
 from reservations r
 join payment_transactions pt on r.id = pt.reservations_id
@@ -920,11 +920,108 @@ group by dt.code
 order by count(r.id) desc;
 
 -- View: total booking last week
-create view view_total_booking_last_week as
+CREATE OR REPLACE VIEW view_total_booking_last_week as
 select * 
 from reservations
 where pickup_date >= sysdate - 7
 order by pickup_date desc;
+
+-- View: all available cars
+CREATE OR REPLACE VIEW view_all_available_cars as
+select * 
+from vehicles 
+where id not in (
+    select vehicles_id from reservations where status = 'active'
+);
+
+-- view all rental history
+create or replace view view_all_rental_history as
+SELECT
+    r.id as id,
+    u.id as user_id,
+    u.fname || ' ' || u.lname AS customer_name,
+    vt.make || '-' || vt.model AS car_name,
+    r.pickup_date,
+    r.dropoff_date,
+    r.charge
+FROM
+    reservations r
+JOIN
+    users u ON r.users_id = u.id
+JOIN
+    vehicles ON r.vehicles_id = vehicles.id
+JOIN
+    vehicle_types vt ON vehicles.vehicle_type_id = vt.id
+WHERE
+    r.status = 'completed'
+ORDER BY
+    u.fname || ' ' || u.lname, r.pickup_date DESC;
+
+-- Procedure: Initiate a booking / Update a booking
+
+
+-- Procedure: Cancel a booking (should happen only if reservation isn't active yet)
+-- Procedure: Add a payment method / Update a payment method
+-- Procedure: View payment methods
+-- Procedure: delete payment methods
+-- Procedure: initiate payment transactions
+-- Procedure: Update profile
+
+-- Function: Retrieve rental records for a user
+CREATE OR REPLACE FUNCTION get_user_completed_reservations(user_id IN NUMBER)
+RETURN SYS_REFCURSOR
+AS
+    c_reservations SYS_REFCURSOR;
+BEGIN
+    OPEN c_reservations FOR
+        SELECT
+            r.id as id,
+            u.id as user_id,
+            u.fname || ' ' || u.lname AS customer_name,
+            vt.make || '-' || vt.model AS car_name,
+            r.pickup_date,
+            r.dropoff_date,
+            r.charge
+        FROM
+            reservations r
+        JOIN
+            users u ON r.users_id = u.id
+        JOIN
+            vehicles ON r.vehicles_id = vehicles.id
+        JOIN
+            vehicle_types vt ON vehicles.vehicle_type_id = vt.id
+        WHERE
+            r.status = 'completed' and u.id = user_id
+        ORDER BY
+            u.fname || ' ' || u.lname, r.pickup_date DESC;
+    RETURN c_reservations;
+END;
+/
+
+-- Procedure: Display rental history
+CREATE OR REPLACE PROCEDURE get_user_reservations_history(user_id IN NUMBER) AS
+    l_reservations SYS_REFCURSOR;
+    r_reservation cust_rental_history%ROWTYPE;
+BEGIN
+    l_reservations := get_user_completed_reservations(user_id);
+    LOOP
+        BEGIN
+            FETCH l_reservations INTO r_reservation;
+            EXIT WHEN l_reservations%NOTFOUND;
+            DBMS_OUTPUT.PUT_LINE(r_reservation.id || ', ' || r_reservation.customer_name || ', ' || r_reservation.car_name || ', ' || r_reservation.pickup_date || ', ' || r_reservation.dropoff_date || ', ' || r_reservation.charge);
+        EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+                DBMS_OUTPUT.PUT_LINE('No reservations found.');
+            WHEN OTHERS THEN
+                DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
+        END;
+    END LOOP;
+    CLOSE l_reservations;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
+END;
+/
 
 -- Add data
 -- Add locations

@@ -1,5 +1,5 @@
 -- View: all available cars in said location (note: reduce location data)
-select * from vehicles where id not in ( select id from reservations where status = 'active' );
+SELECT * FROM view_all_available_cars;
 
 -- - [ ] Procedure: Initiate a booking / Update a booking
 -- - [ ] Procedure: Cancel a booking (should happen only if reservation isn't active yet)
@@ -9,3 +9,6 @@ select * from vehicles where id not in ( select id from reservations where statu
 -- - [ ] Procedure: initiate payment transactions
 -- - [ ] Procedure: Update profile
 -- - [ ] View: rental history
+EXEC get_user_reservations_history(1);
+EXEC get_user_reservations_history(3);
+
