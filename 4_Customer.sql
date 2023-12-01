@@ -3,16 +3,18 @@ SELECT * FROM view_all_available_cars;
 
 -- - [ ] Procedure: Cancel a booking (should happen only if reservation isn't active yet)
 EXEC cancel_reservation(1);
--- - [ ] Procedure: Add a payment method / Update a payment method
--- - [ ] Procedure: View payment methods
--- - [ ] Procedure: delete payment methods
+-- - [ ] Procedure: Add a payment method a payment method
+EXEC add_payment_method('3000300030003002','true', '2024-01-31','186','1 kev St, New York, USA','Abigail');
+EXEC add_payment_method('3000300030003004','true', '01-2024','186','1 kev St, New York, USA','Abigail');
+
+-- - [ ] View payment methods
+EXEC get_payment_methods('Abigail');
 -- - [ ] View: rental history
 EXEC get_user_reservations_history(1);
 EXEC get_user_reservations_history(3);
 
 -- - [ ] Procedure: Initiate a booking / Update a booking
 -- Customer reservation flow
-
 DECLARE
     v_pickup_location_name VARCHAR2(100) := 'Los Angeles';
     v_dropoff_location_name VARCHAR2(100) := 'New York';

@@ -504,73 +504,6 @@ EXCEPTION
 END add_vehicle;
 /
 
--- Procedure for adding payment methods
-CREATE OR REPLACE PROCEDURE add_payment_method (
-    pi_card_number VARCHAR2,
-    pi_active_status VARCHAR2,
-    pi_expiration_date VARCHAR2,
-    pi_security_code VARCHAR2,
-    pi_billing_address VARCHAR2,
-    pi_user_name VARCHAR
-) AS
-    v_card_count NUMBER;
-    v_status NUMBER;
-    v_expiration_date DATE;
-    e_unique_name EXCEPTION;
-    v_user_id users.id%TYPE;
-    e_invalid_ref EXCEPTION;
-    e_invalid_data EXCEPTION;
-
-BEGIN
-    SELECT COUNT(*) INTO v_card_count FROM payment_methods WHERE card_number = pi_card_number;
-    v_expiration_date := TO_DATE(pi_expiration_date, 'YYYY-MM-DD');
-    
-    IF pi_active_status = 'true' THEN
-        v_status := 1;
-    ELSIF pi_active_status = 'false' THEN
-        v_status := 0;
-    ELSE
-        RAISE e_invalid_data;
-    END IF;
-    
-    SELECT id
-        INTO v_user_id
-        FROM users
-        WHERE fname = pi_user_name;
-
-    IF v_user_id IS NULL THEN
-        RAISE e_invalid_ref;
-    END IF;
-
-    IF LENGTH(pi_card_number) != 16 OR LENGTH(pi_security_code) != 3 OR v_expiration_date < SYSDATE THEN
-        RAISE e_invalid_data;
-    END IF;
-
-    IF v_card_count = 0 THEN
-        INSERT INTO payment_methods (id, active_status, card_number, expiration_date, security_code, billing_address, users_id)
-        VALUES (payment_methods_seq.nextval, v_status, pi_card_number, v_expiration_date, pi_security_code, pi_billing_address, v_user_id);
-
-        DBMS_OUTPUT.PUT_LINE(pi_card_number || ' added');
-    ELSE
-        RAISE e_unique_name;
-    END IF;
-
-    COMMIT;
-
-EXCEPTION
-    WHEN e_unique_name THEN
-        DBMS_OUTPUT.PUT_LINE(pi_card_number || ' already exists');
-    WHEN e_invalid_ref THEN
-        DBMS_OUTPUT.PUT_LINE('References do not exist');
-    WHEN e_invalid_data THEN
-        DBMS_OUTPUT.PUT_LINE('Invalid data');
-    WHEN OTHERS THEN
-        RAISE;
-        ROLLBACK;
-
-END add_payment_method;
-/
-
 -- Procedure for adding reservations
 CREATE OR REPLACE PROCEDURE add_reservation (
     pi_status VARCHAR2,
@@ -788,9 +721,6 @@ END update_insurance_type;
 /
 
 
-
--- Views
-
 -- View: insurance analytics (count of reservations for each and total revenue from each)
 CREATE OR REPLACE VIEW view_insurance_res_rev AS
 SELECT
@@ -997,6 +927,126 @@ EXCEPTION
     WHEN OTHERS THEN
         RAISE;
 END;
+/
+
+CREATE OR REPLACE FUNCTION IsDateFormat(input_string VARCHAR2)
+RETURN NUMBER IS
+    is_valid NUMBER := 1;
+BEGIN
+    IF LENGTH(input_string) <> 10 THEN
+        is_valid := 0;
+    ELSIF SUBSTR(input_string, 5, 1) <> '-' OR SUBSTR(input_string, 8, 1) <> '-' THEN
+        is_valid := 0;
+    ELSIF NOT (REGEXP_LIKE(SUBSTR(input_string, 1, 4), '^[0-9]+$')) THEN
+        is_valid := 0;
+    ELSIF NOT (REGEXP_LIKE(SUBSTR(input_string, 6, 2), '^[0-9]+$')) THEN
+        is_valid := 0;
+    ELSIF NOT (REGEXP_LIKE(SUBSTR(input_string, 9, 2), '^[0-9]+$')) THEN
+        is_valid := 0;
+    END IF;
+    
+    RETURN is_valid;
+END;
+/
+
+CREATE OR REPLACE FUNCTION IsDateFormatmmyyyy(input_string VARCHAR2)
+RETURN NUMBER IS
+    is_valid NUMBER := 1;
+BEGIN
+    IF LENGTH(input_string) <> 7 THEN
+        is_valid := 0;
+    ELSIF SUBSTR(input_string, 3, 1) <> '-' THEN
+        is_valid := 0;
+    ELSIF NOT (REGEXP_LIKE(SUBSTR(input_string, 1, 2), '^[0-9]+$')) THEN
+        is_valid := 0;
+    ELSIF NOT (REGEXP_LIKE(SUBSTR(input_string, 4, 4), '^[0-9]+$')) THEN
+        is_valid := 0;
+    END IF;
+    
+    RETURN is_valid;
+END;
+/
+
+CREATE OR REPLACE FUNCTION ConvertDateFormatmmyyyy(input_string VARCHAR2)
+RETURN VARCHAR2 IS
+    output_string VARCHAR2(10);
+BEGIN
+    output_string := SUBSTR(input_string, 4, 4) || '-' || SUBSTR(input_string, 1, 2) || '-01';
+    RETURN output_string;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE add_payment_method (
+    pi_card_number VARCHAR2,
+    pi_active_status VARCHAR2,
+    pi_expiration_date VARCHAR2,
+    pi_security_code VARCHAR2,
+    pi_billing_address VARCHAR2,
+    pi_user_name VARCHAR
+) AS
+    v_card_count NUMBER;
+    v_status NUMBER;
+    v_expiration_date DATE;
+    v_datecheck NUMBER;
+    e_unique_name EXCEPTION;
+    v_user_id users.id%TYPE;
+    e_invalid_ref EXCEPTION;
+    e_invalid_data EXCEPTION;
+
+BEGIN
+    SELECT COUNT(*) INTO v_card_count FROM payment_methods WHERE card_number = pi_card_number;
+    
+    v_datecheck := IsDateFormatmmyyyy(pi_expiration_date);
+    IF v_datecheck = 1 THEN
+        v_expiration_date := TO_DATE(ConvertDateFormatmmyyyy(pi_expiration_date), 'YYYY-MM-DD');
+    ELSE
+        v_expiration_date := TO_DATE(pi_expiration_date, 'YYYY-MM-DD');
+    END IF;
+    
+    IF pi_active_status = 'true' THEN
+        v_status := 1;
+    ELSIF pi_active_status = 'false' THEN
+        v_status := 0;
+    ELSE
+        RAISE e_invalid_data;
+    END IF;
+    
+    SELECT id
+        INTO v_user_id
+        FROM users
+        WHERE fname = pi_user_name;
+
+    IF v_user_id IS NULL THEN
+        RAISE e_invalid_ref;
+    END IF;
+
+    IF LENGTH(pi_card_number) != 16 OR LENGTH(pi_security_code) != 3 OR v_expiration_date < SYSDATE THEN
+        RAISE e_invalid_data;
+    END IF;
+
+    IF v_card_count = 0 THEN
+        INSERT INTO payment_methods (id, active_status, card_number, expiration_date, security_code, billing_address, users_id)
+        VALUES (payment_methods_seq.nextval, v_status, pi_card_number, v_expiration_date, pi_security_code, pi_billing_address, v_user_id);
+
+        DBMS_OUTPUT.PUT_LINE(pi_card_number || ' added');
+    ELSE
+        RAISE e_unique_name;
+    END IF;
+
+    COMMIT;
+
+EXCEPTION
+    WHEN e_unique_name THEN
+        DBMS_OUTPUT.PUT_LINE(pi_card_number || ' already exists');
+    WHEN e_invalid_ref THEN
+        DBMS_OUTPUT.PUT_LINE('References do not exist');
+    WHEN e_invalid_data THEN
+        DBMS_OUTPUT.PUT_LINE('Invalid data');
+    WHEN OTHERS THEN
+        RAISE;
+        ROLLBACK;
+
+END add_payment_method;
 /
 
 -- Package: Customer reservation flow
@@ -1531,3 +1581,27 @@ BEGIN
 END;
 /
 
+-- View payment methods for a user
+CREATE OR REPLACE PROCEDURE get_payment_methods(
+    p_user_name IN VARCHAR2
+) AS
+    p_payment_methods SYS_REFCURSOR;
+    l_payment_method payment_methods%ROWTYPE;
+    v_users_id users.id%TYPE;
+BEGIN
+    SELECT id INTO v_users_id FROM users WHERE fname = p_user_name;
+
+    OPEN p_payment_methods FOR
+    SELECT *
+    FROM payment_methods
+    WHERE users_id = v_users_id;
+    
+    LOOP
+        FETCH p_payment_methods INTO l_payment_method;
+        EXIT WHEN p_payment_methods%NOTFOUND;
+        DBMS_OUTPUT.PUT_LINE('Payment Method ID: ' || l_payment_method.card_number || ', expiration_date: ' || l_payment_method.expiration_date);
+    END LOOP;
+    
+    CLOSE p_payment_methods;
+END;
+/

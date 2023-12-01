@@ -14,11 +14,17 @@ Vehicles will be marked unavailable once the reservation is active.
 
 # Covered use cases
 ### App
-- [ ] (trigger)Update expired reservations to cancelled
+- [x] (trigger)Update expired reservations to cancelled
+```
+trg_update_expired_reservations
+```
+- [x] retrieve rental records for a user
+```
+EXEC get_user_completed_reservations(user_id IN NUMBER);
+```
 
 
 ### Insurance analyst
-- [ ] Add more data under first two points
 - [x] Procedure: create insurance type
 ```
 add_insurance_type (pi_name VARCHAR2, pi_coverage NUMBER)
@@ -121,13 +127,13 @@ END;
 EXEC cancel_reservation(RESERVATION_ID as number);
 ```
 - [ ] Procedure: Add a payment method / Update a payment method
+
 - [ ] Procedure: View payment methods
-- [ ] Procedure: delete payment methods
+```
+EXEC get_payment_methods('Abigail');
+```
 - [x] View: rental history
 ```
--- all history
-select * from view_all_rental_history;
-
 -- history by a user
 EXEC get_user_reservations_history(user_id as number);
 ```
@@ -137,14 +143,3 @@ EXEC get_user_reservations_history(user_id as number);
 - [ ] View rental history (niv)
 - [ ] View all cars
 - [ ] View customers who has rented his cars 
-
-
-## Functions , triggers
-- retrieve rental records for a user
-```
-EXEC get_user_completed_reservations(user_id IN NUMBER);
-```
-- update expired reservation status
-```
-trg_update_expired_reservations
-```
