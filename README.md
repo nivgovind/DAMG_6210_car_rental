@@ -150,5 +150,13 @@ EXEC add_vehicle(30.00, 5000, 'true', 5, 'MIN123NE0W456OOP', 'New York', 'Bob', 
 ```
 EXEC update_car_availability('BOS123NE0W456OOP', 'false');
 ```
-- [ ] View vendor cars
-- [ ] View customers who has rented his cars 
+- [x] View vendor cars
+```
+EXEC get_vendor_vehicle_list(2);
+EXEC get_vendor_vehicle_list(4);
+```
+- [x] View rental history who has rented his cars 
+```
+EXEC get_vendor_reservations_history(2);
+EXEC get_vendor_reservations_history(4);
+```
