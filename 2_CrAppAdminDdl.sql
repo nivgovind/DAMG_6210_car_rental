@@ -421,13 +421,16 @@ CREATE OR REPLACE PROCEDURE add_vehicle (
     v_status NUMBER;
     v_location_id vehicle_types.id%TYPE;
     v_vendor_id users.id%TYPE;
+    v_vendor_name users.fname%TYPE;
+    v_vendor_taxid users.tax_id%TYPE;
+    v_role users.role%TYPE;
     v_vehicle_type_id vehicles.id%TYPE;
     e_unique_reg_id EXCEPTION;
     e_invalid_reg_id EXCEPTION;
     e_invalid_ref EXCEPTION;
     e_invalid_pger_count EXCEPTION;
     e_invalid_data EXCEPTION;
-
+    e_invalid_vendor EXCEPTION;
 BEGIN
     SELECT COUNT(*) INTO v_reg_count FROM vehicles WHERE registration_id = pi_registration_id;
 
@@ -456,10 +459,14 @@ BEGIN
         FROM locations
         WHERE name = pi_location_name;
 
-    SELECT id
-        INTO v_vendor_id
+    SELECT id, company_name, tax_id, role
+        INTO v_vendor_id, v_vendor_name, v_vendor_taxid, v_role
         FROM users
         WHERE fname = pi_user_name;
+
+    if v_role != 'vendor' OR v_vendor_name IS NULL OR v_vendor_taxid IS NULL THEN
+        raise e_invalid_vendor;
+    END IF;
     
     SELECT id
         INTO v_vehicle_type_id
@@ -488,15 +495,17 @@ BEGIN
 
 EXCEPTION
     WHEN e_unique_reg_id THEN
-        DBMS_OUTPUT.PUT_LINE(pi_registration_id || 'already exists');
+        DBMS_OUTPUT.PUT_LINE('ERROR: ' || pi_registration_id || ' already exists');
     WHEN e_invalid_reg_id THEN
-        DBMS_OUTPUT.PUT_LINE(pi_registration_id || 'is invalid');
+        DBMS_OUTPUT.PUT_LINE('ERROR: ' || pi_registration_id || ' is invalid');
     WHEN e_invalid_ref THEN
-        DBMS_OUTPUT.PUT_LINE('References does not exist');
+        DBMS_OUTPUT.PUT_LINE('ERROR: References do not exist');
     WHEN e_invalid_pger_count THEN
-        DBMS_OUTPUT.PUT_LINE(pi_passenger_capacity || 'is invalid');
+        DBMS_OUTPUT.PUT_LINE('ERROR: ' || pi_passenger_capacity || ' is invalid');
     WHEN e_invalid_data THEN
-        DBMS_OUTPUT.PUT_LINE('Data is invalid');
+        DBMS_OUTPUT.PUT_LINE('ERROR: Data is invalid');
+    WHEN e_invalid_vendor THEN
+        DBMS_OUTPUT.PUT_LINE('ERROR: Vendor is invalid');
     WHEN OTHERS THEN
         RAISE;
         COMMIT;
@@ -1604,4 +1613,35 @@ BEGIN
     
     CLOSE p_payment_methods;
 END;
+/
+
+-- Procedure: Update car availability
+create or replace procedure update_car_availability(
+    pi_registration_id VARCHAR2,
+    pi_available VARCHAR2
+) as
+    v_status number;
+    e_invalid_data EXCEPTION;
+begin
+    IF pi_available = 'true' THEN
+        v_status := 1;
+    ELSIF pi_available = 'false' THEN
+        v_status := 0;
+    ELSE
+        RAISE e_invalid_data;
+    END IF;
+
+    update vehicles
+    set availability_status = v_status
+    where registration_id = pi_registration_id;
+    commit;
+EXCEPTION
+    WHEN e_invalid_data THEN
+        DBMS_OUTPUT.PUT_LINE('ERROR: Invalid data');
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('ERROR: Vehicle not found');
+    WHEN OTHERS then
+        raise;
+        commit;
+end update_car_availability;
 /

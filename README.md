@@ -131,7 +131,7 @@ EXEC cancel_reservation(RESERVATION_ID as number);
 EXEC add_payment_method('3000300030003002','true', '2024-01-31','186','1 kev St, New York, USA','Abigail');
 EXEC add_payment_method('3000300030003004','true', '01-2024','186','1 kev St, New York, USA','Abigail');
 ```
-- [ ] Procedure: View payment methods
+- [x] Procedure: View payment methods
 ```
 EXEC get_payment_methods('Abigail');
 ```
@@ -142,7 +142,14 @@ EXEC get_user_reservations_history(user_id as number);
 ```
 
 ### Vendor (saurabh)
-- [ ] Add/update a new car
+- [x] Add a new car
+```
+EXEC add_vehicle(30.00, 5000, 'true', 5, 'MIN123NE0W456OOP', 'New York', 'Bob', 'silverado')
+```
+- [x] update availability
+```
+EXEC update_car_availability('BOS123NE0W456OOP', 'false');
+```
 - [ ] View rental history (niv)
 - [ ] View all cars
 - [ ] View customers who has rented his cars 
