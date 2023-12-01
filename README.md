@@ -81,7 +81,14 @@ EXEC cancel_reservation(RESERVATION_ID as number);
 - [ ] Procedure: Add a payment method / Update a payment method
 - [ ] Procedure: View payment methods
 - [ ] Procedure: delete payment methods
-- [ ] Procedure: initiate payment transactions
+- [x] Procedure: initiate payment transactions
+```
+-- initiate
+EXEC initiate_payment_transaction (pi_reservation_id IN NUMBER, pi_card_number IN VARCHAR2, pi_discount_code  IN VARCHAR2 DEFAULT NULL);
+
+--approve
+approve_transaction (pi_reservation_id IN NUMBER);
+```
 - [x] View: rental history
 ```
 -- all history

@@ -8,6 +8,8 @@ EXEC cancel_reservation(1);
 -- - [ ] Procedure: View payment methods
 -- - [ ] Procedure: delete payment methods
 -- - [ ] Procedure: initiate payment transactions
+EXEC initiate_payment_transaction(4, '7432738484381812', 'WONDER10');
+EXEC approve_transaction(4);
 -- - [ ] Procedure: Update profile
 -- - [ ] View: rental history
 EXEC get_user_reservations_history(1);
