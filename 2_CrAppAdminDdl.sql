@@ -1175,3 +1175,16 @@ EXEC add_payment_transaction('completed', 100.00, 'VAR300com', 1, '1234876539081
 EXEC add_payment_transaction('completed', 200.00, 'WERE200', 2, '1234876539081234', 'NEW2024');
 EXEC add_payment_transaction('completed', 300.00, 'COMP20', 3, '1234876539081234', 'FIRST');
 EXEC add_payment_transaction('completed', 350.00, 'COP20we', 4, '1234876539081234', 'NO_DISC');
+
+
+-- Update expired reservations to cancelled
+CREATE OR REPLACE TRIGGER trg_update_expired_reservations
+BEFORE INSERT OR UPDATE ON reservations
+FOR EACH ROW
+BEGIN
+    IF :NEW.dropoff_date < SYSDATE AND :NEW.status != 'completed' THEN
+        :NEW.status := 'cancelled';
+    END IF;
+END;
+/
+

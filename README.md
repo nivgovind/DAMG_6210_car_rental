@@ -98,8 +98,12 @@ EXEC get_user_reservations_history(user_id as number);
 - [ ] View customers who has rented his cars 
 
 
-## Functions
+## Functions , triggers
 - retrieve rental records for a user
 ```
-get_user_completed_reservations(user_id IN NUMBER)
+EXEC get_user_completed_reservations(user_id IN NUMBER);
+```
+- update expired reservation status
+```
+trg_update_expired_reservations
 ```
