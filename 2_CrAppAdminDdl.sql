@@ -1442,30 +1442,30 @@ BEGIN
 END;
 /
 
--- Procedure: Display rental history
--- CREATE OR REPLACE PROCEDURE get_user_reservations_history(user_id IN NUMBER) AS
---     l_reservations SYS_REFCURSOR;
---     r_reservation cust_rental_history%ROWTYPE;
--- BEGIN
---     l_reservations := get_user_completed_reservations(user_id);
---     LOOP
---         BEGIN
---             FETCH l_reservations INTO r_reservation;
---             EXIT WHEN l_reservations%NOTFOUND;
---             DBMS_OUTPUT.PUT_LINE(r_reservation.id || ', ' || r_reservation.customer_name || ', ' || r_reservation.car_name || ', ' || r_reservation.pickup_date || ', ' || r_reservation.dropoff_date || ', ' || r_reservation.charge);
---         EXCEPTION
---             WHEN NO_DATA_FOUND THEN
---                 DBMS_OUTPUT.PUT_LINE('No reservations found.');
---             WHEN OTHERS THEN
---                 DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
---         END;
---     END LOOP;
---     CLOSE l_reservations;
--- EXCEPTION
---     WHEN OTHERS THEN
---         DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
--- END;
--- /
+Procedure: Display rental history
+CREATE OR REPLACE PROCEDURE get_user_reservations_history(user_id IN NUMBER) AS
+    l_reservations SYS_REFCURSOR;
+    r_reservation cust_rental_history%ROWTYPE;
+BEGIN
+    l_reservations := get_user_completed_reservations(user_id);
+    LOOP
+        BEGIN
+            FETCH l_reservations INTO r_reservation;
+            EXIT WHEN l_reservations%NOTFOUND;
+            DBMS_OUTPUT.PUT_LINE(r_reservation.id || ', ' || r_reservation.customer_name || ', ' || r_reservation.car_name || ', ' || r_reservation.pickup_date || ', ' || r_reservation.dropoff_date || ', ' || r_reservation.charge);
+        EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+                DBMS_OUTPUT.PUT_LINE('No reservations found.');
+            WHEN OTHERS THEN
+                DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
+        END;
+    END LOOP;
+    CLOSE l_reservations;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
+END;
+/
 
 -- Update expired reservations to cancelled
 CREATE OR REPLACE TRIGGER trg_update_expired_reservations
