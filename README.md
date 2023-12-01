@@ -70,8 +70,14 @@ select * from view_total_booking_last_week;
 ```
 select * from view_all_available_cars;
 ```
-- [ ] Procedure: Initiate a booking / Update a booking
-- [ ] Procedure: Cancel a booking (should happen only if reservation isn't active yet)
+- [ ] Procedure: Initiate a complete booking (reservation with successful payment)
+```
+
+```
+- [x] Procedure: Cancel a booking (should happen only if reservation isn't active yet)
+```
+EXEC cancel_reservation(RESERVATION_ID as number);
+```
 - [ ] Procedure: Add a payment method / Update a payment method
 - [ ] Procedure: View payment methods
 - [ ] Procedure: delete payment methods

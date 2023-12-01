@@ -3,6 +3,7 @@ SELECT * FROM view_all_available_cars;
 
 -- - [ ] Procedure: Initiate a booking / Update a booking
 -- - [ ] Procedure: Cancel a booking (should happen only if reservation isn't active yet)
+EXEC cancel_reservation(1);
 -- - [ ] Procedure: Add a payment method / Update a payment method
 -- - [ ] Procedure: View payment methods
 -- - [ ] Procedure: delete payment methods

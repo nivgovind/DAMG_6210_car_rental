@@ -959,8 +959,52 @@ ORDER BY
 
 -- Procedure: Initiate a booking / Update a booking
 
-
 -- Procedure: Cancel a booking (should happen only if reservation isn't active yet)
+CREATE OR REPLACE PROCEDURE cancel_reservation (
+    pi_reservation_id IN NUMBER
+) AS
+    v_reservation_status VARCHAR2(10);
+
+    -- Exceptions
+    e_booking_not_found EXCEPTION;
+    e_invalid_reservation_state EXCEPTION;
+
+BEGIN
+    -- Check if the reservation ID exists
+    SELECT status
+    INTO v_reservation_status
+    FROM reservations
+    WHERE id = pi_reservation_id;
+
+    -- Exception: Booking ID not found
+    IF v_reservation_status IS NULL THEN
+        RAISE e_booking_not_found;
+    END IF;
+
+    -- Exception: Booking ID found but not in pending state
+    IF v_reservation_status != 'pending' THEN
+        RAISE e_invalid_reservation_state;
+    END IF;
+
+    -- Update the reservation status to canceled
+    UPDATE reservations
+    SET status = 'cancelled'
+    WHERE id = pi_reservation_id;
+
+    DBMS_OUTPUT.PUT_LINE('Reservation ' || pi_reservation_id || ' has been cancelled.');
+    COMMIT;
+
+EXCEPTION
+    WHEN e_booking_not_found THEN
+        DBMS_OUTPUT.PUT_LINE('Error: Reservation ID not found.');
+    WHEN e_invalid_reservation_state THEN
+        DBMS_OUTPUT.PUT_LINE('Error: Reservation is not in pending state.');
+    WHEN OTHERS THEN
+        RAISE;
+        ROLLBACK;
+END cancel_reservation;
+/
+
 -- Procedure: Add a payment method / Update a payment method
 -- Procedure: View payment methods
 -- Procedure: delete payment methods
