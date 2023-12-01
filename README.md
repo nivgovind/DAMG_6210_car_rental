@@ -14,8 +14,7 @@ Vehicles will be marked unavailable once the reservation is active.
 
 # Covered use cases
 ### App
-- [ ] (trigger)When reservation is created, it should calculate the charge and add insurance cost
-- [ ] (trigger)When payment_transaction is created, we should create label for approval_code
+- [ ] (trigger)Update expired reservations to cancelled
 
 
 ### Insurance analyst
