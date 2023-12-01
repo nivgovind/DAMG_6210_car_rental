@@ -957,7 +957,353 @@ WHERE
 ORDER BY
     u.fname || ' ' || u.lname, r.pickup_date DESC;
 
--- Procedure: Initiate a booking / Update a booking
+
+
+-- Function: get_reservation_id
+CREATE OR REPLACE FUNCTION get_reservation_id(
+    pi_user_name VARCHAR2,
+    pi_vehicle_registration_id VARCHAR2,
+    pi_pickup_date VARCHAR2
+) RETURN NUMBER IS
+    v_reservation_id NUMBER;
+    v_pick_date DATE;
+    v_vehicle_id NUMBER;
+    v_user_id NUMBER;
+    e_invalid_reference EXCEPTION;
+BEGIN
+    v_pick_date:= TO_DATE(pi_pickup_date, 'YYYY-MM-DD');
+    SELECT id INTO v_vehicle_id FROM vehicles WHERE registration_id = pi_vehicle_registration_id;
+    SELECT id INTO v_user_id FROM users WHERE fname = pi_user_name;
+    
+    IF v_vehicle_id IS NULL OR v_user_id IS NULL THEN
+        raise e_invalid_reference;
+    END IF;
+    
+    SELECT id
+    INTO v_reservation_id
+    FROM reservations
+    WHERE users_id = v_user_id
+    AND vehicles_id = v_vehicle_id
+    AND pickup_date = v_pick_date;
+
+    RETURN v_reservation_id;
+EXCEPTION
+    WHEN e_invalid_reference THEN
+        DBMS_OUTPUT.PUT_LINE('ERROR: Invalid vehicle or user');
+        RETURN NULL;
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('ERROR: No reservation found');
+        RETURN NULL;
+    WHEN OTHERS THEN
+        RAISE;
+END;
+/
+
+-- Package: Customer reservation flow
+CREATE OR REPLACE PACKAGE booking_package AS
+    -- Procedure: initiate booking
+    PROCEDURE initiate_booking (
+        pi_pickup_date VARCHAR2,
+        pi_dropoff_date VARCHAR2,
+        pi_pickup_location_name VARCHAR2,
+        pi_dropoff_location_name VARCHAR2,
+        pi_passenger_count NUMBER,
+        pi_vehicle_registration_id VARCHAR2,
+        pi_user_name VARCHAR2,
+        pi_insurance_type_name VARCHAR2
+    );
+
+    -- Function: generate insurance ID
+    FUNCTION generate_insurance_id(insurance_name_string VARCHAR2) RETURN VARCHAR2;
+
+    -- Procedure: initiate payment transaction
+    PROCEDURE initiate_payment_transaction (
+        pi_user_name IN VARCHAR2,
+        pi_vehicle_registration_id IN VARCHAR2,
+        pi_pick_up_date IN VARCHAR2,
+        pi_card_number    IN VARCHAR2,
+        pi_discount_code  IN VARCHAR2 DEFAULT NULL
+    );
+
+    -- Procedure: approve payment transactions
+    PROCEDURE approve_transaction (
+        pi_user_name IN VARCHAR2,
+        pi_vehicle_registration_id IN VARCHAR2,
+        pi_pick_up_date IN VARCHAR2
+    );
+END booking_package;
+/
+
+CREATE OR REPLACE PACKAGE BODY booking_package AS
+    -- Procedure: initiate booking
+    PROCEDURE initiate_booking (
+        pi_pickup_date VARCHAR2,
+        pi_dropoff_date VARCHAR2,
+        pi_pickup_location_name VARCHAR2,
+        pi_dropoff_location_name VARCHAR2,
+        pi_passenger_count NUMBER,
+        pi_vehicle_registration_id VARCHAR2,
+        pi_user_name VARCHAR2,
+        pi_insurance_type_name VARCHAR2
+    ) AS
+        v_hourly_rate vehicles.hourly_rate%TYPE;    
+        v_charge NUMBER;
+        v_insurance_id reservations.insurance_id%TYPE;
+        v_no_days NUMBER;
+        v_pickup_location_id locations.id%TYPE;
+        v_dropoff_location_id locations.id%TYPE;
+        v_insurance_type_id insurance_types.id%TYPE;
+        v_user_id users.id%TYPE;
+        v_vehicle_id vehicles.id%TYPE;    
+        v_pick_date DATE;
+        v_drop_date DATE;
+        e_invalid_location EXCEPTION;
+        e_invalid_insurance EXCEPTION;
+        e_invalid_user EXCEPTION;
+        e_invalid_vehicle EXCEPTION;
+        e_passenger_count EXCEPTION;
+    BEGIN
+        IF pi_passenger_count > 10 THEN
+            RAISE e_passenger_count;
+        END IF;
+
+        SELECT id INTO v_pickup_location_id FROM locations WHERE name = pi_pickup_location_name;
+        SELECT id INTO v_dropoff_location_id FROM locations WHERE name = pi_dropoff_location_name;
+        SELECT id INTO v_insurance_type_id FROM insurance_types WHERE lower(name) LIKE lower(pi_insurance_type_name);
+        SELECT id INTO v_user_id FROM users WHERE fname = pi_user_name;
+        SELECT id, hourly_rate INTO v_vehicle_id, v_hourly_rate FROM vehicles WHERE registration_id = pi_vehicle_registration_id;
+
+        IF v_pickup_location_id IS NULL OR v_dropoff_location_id IS NULL THEN
+            RAISE e_invalid_location;
+        END IF;
+
+        IF v_insurance_type_id IS NULL THEN
+            RAISE e_invalid_insurance;
+        END IF;
+
+        IF v_user_id IS NULL THEN
+            RAISE e_invalid_user;
+        END IF;
+
+        IF v_vehicle_id IS NULL THEN
+            RAISE e_invalid_vehicle;
+        END IF;
+
+        v_pick_date:= TO_DATE(pi_pickup_date, 'YYYY-MM-DD');
+        v_drop_date:= TO_DATE(pi_dropoff_date, 'YYYY-MM-DD');
+        v_no_days:= v_drop_date - v_pick_date;
+        v_charge := v_hourly_rate * v_no_days * 24;
+        v_insurance_id := generate_insurance_id(pi_insurance_type_name);
+
+        INSERT INTO reservations (
+            id,
+            status,
+            charge,
+            pickup_date,
+            dropoff_date,
+            insurance_id,
+            pickup_location_id,
+            dropoff_location_id,
+            passenger_count,
+            vehicles_id,
+            users_id,
+            insurance_types_id
+        ) VALUES (
+            reservations_seq.nextval,
+            'pending',
+            v_charge,
+            v_pick_date,
+            v_drop_date,
+            v_insurance_id,
+            v_pickup_location_id,
+            v_dropoff_location_id,
+            pi_passenger_count,
+            v_vehicle_id,
+            v_user_id,
+            v_insurance_type_id
+        );
+
+        DBMS_OUTPUT.PUT_LINE('Reservation added');
+        COMMIT;
+
+    EXCEPTION
+        WHEN e_invalid_location THEN
+            DBMS_OUTPUT.PUT_LINE('ERROR: Invalid pickup or dropoff location');
+        WHEN e_invalid_insurance THEN
+            DBMS_OUTPUT.PUT_LINE('ERROR: Invalid insurance type');
+        WHEN e_invalid_user THEN
+            DBMS_OUTPUT.PUT_LINE('ERROR: Invalid user');
+        WHEN e_invalid_vehicle THEN
+            DBMS_OUTPUT.PUT_LINE('ERROR: Invalid vehicle');
+        WHEN e_passenger_count THEN
+            DBMS_OUTPUT.PUT_LINE('ERROR: Passenger count exceeds limit');
+        WHEN OTHERS THEN
+            RAISE;
+            COMMIT;
+
+    END initiate_booking;
+
+    -- Function: generate insurance ID
+    FUNCTION generate_insurance_id(insurance_name_string VARCHAR2) RETURN VARCHAR2 IS
+        v_prefix VARCHAR2(2) := SUBSTR(LOWER(insurance_name_string), 1, 2);
+        v_suffix VARCHAR2(4) := LPAD(DBMS_RANDOM.VALUE(0, 9999), 4, '0');
+    BEGIN
+        RETURN v_prefix || v_suffix;
+    END generate_insurance_id;
+
+    -- Procedure: initiate payment transaction
+    PROCEDURE initiate_payment_transaction (
+        pi_user_name IN VARCHAR2,
+        pi_vehicle_registration_id IN VARCHAR2,
+        pi_pick_up_date IN VARCHAR2,
+        pi_card_number    IN VARCHAR2,
+        pi_discount_code  IN VARCHAR2 DEFAULT NULL
+    ) AS
+        pi_reservation_id reservations.id%TYPE;
+        v_reservation_status reservations.status%TYPE;
+        v_amount             reservations.charge%TYPE;
+        v_discount_amount    discount_types.discount_amount%TYPE;
+        v_payment_status     payment_transactions.status%TYPE;
+        v_payment_method_id  payment_methods.id%TYPE;
+        v_discount_type_id   discount_types.id%TYPE;
+        v_users_id           reservations.users_id%TYPE;
+        v_pm_users_id        payment_methods.users_id%TYPE;
+        e_reservation_not_found     EXCEPTION;
+        e_payment_method_not_found  EXCEPTION;
+        e_invalid_discount_code     EXCEPTION;
+        e_invalid_reservation_state EXCEPTION;
+        e_invalid_discount_amount   EXCEPTION;
+        e_invalid_data              EXCEPTION;
+    BEGIN
+        pi_reservation_id := get_reservation_id(pi_user_name, pi_vehicle_registration_id, pi_pick_up_date);
+        -- Check if the reservation ID exists
+        SELECT status, charge, users_id
+        INTO v_reservation_status, v_amount, v_users_id
+        FROM reservations
+        WHERE id = pi_reservation_id;
+
+        -- Exception: Reservation ID not found
+        IF v_reservation_status IS NULL THEN
+            RAISE e_reservation_not_found;
+        END IF;
+
+        -- Check if the reservation status is 'active' or 'pending'
+        IF v_reservation_status != 'active' and v_reservation_status != 'pending' THEN
+            RAISE e_invalid_reservation_state;
+        END IF;
+
+        -- Check if the payment method exists
+        SELECT id, active_status, users_id
+        INTO v_payment_method_id, v_payment_status, v_pm_users_id
+        FROM payment_methods
+        WHERE card_number = pi_card_number;
+
+        -- Exception: Payment method not found
+        IF v_payment_method_id IS NULL THEN
+            RAISE e_payment_method_not_found;
+        END IF;
+
+        -- Exception: Payment method is not active
+        IF v_payment_status != 1 OR v_pm_users_id != v_users_id THEN
+            RAISE e_invalid_data;
+        END IF;
+
+        -- Check if a discount code is provided
+        IF pi_discount_code IS NOT NULL THEN
+            -- Check if the discount code exists
+            SELECT id, discount_amount
+            INTO v_discount_type_id, v_discount_amount
+            FROM discount_types
+            WHERE code = pi_discount_code;
+
+            -- Exception: Invalid discount code
+            IF v_discount_type_id IS NULL THEN
+                RAISE e_invalid_discount_code;
+            END IF;
+
+            -- Exception: Discount amount is negative
+            IF v_discount_amount < 0 THEN
+                RAISE e_invalid_discount_amount;
+            END IF;
+        END IF;
+
+        -- Insert payment transaction record
+        INSERT INTO payment_transactions (
+            status,
+            amount,
+            approval_code,
+            reservations_id,
+            payment_methods_id,
+            discount_types_id
+        ) VALUES (
+            0, -- Pending status
+            (v_amount - NVL(v_discount_amount, 0)), -- Apply discount if available
+            NULL,
+            pi_reservation_id,
+            v_payment_method_id,
+            v_discount_type_id
+        );
+
+        DBMS_OUTPUT.PUT_LINE('Payment transaction initiated for Reservation ID: ' || pi_reservation_id || 'payment_id:' || payment_transactions_seq.currval);
+        COMMIT;
+
+    EXCEPTION
+        WHEN e_reservation_not_found THEN
+            DBMS_OUTPUT.PUT_LINE('Error: Reservation ID not found.');
+        WHEN e_payment_method_not_found THEN
+            DBMS_OUTPUT.PUT_LINE('Error: Payment method not found.');
+        WHEN e_invalid_discount_code THEN
+            DBMS_OUTPUT.PUT_LINE('Error: Invalid discount code.');
+        WHEN e_invalid_reservation_state THEN
+            DBMS_OUTPUT.PUT_LINE('Error: Reservation is not in active state.');
+        WHEN e_invalid_discount_amount THEN
+            DBMS_OUTPUT.PUT_LINE('Error: Invalid discount amount.');
+        WHEN e_invalid_data THEN
+            DBMS_OUTPUT.PUT_LINE('Error: Invalid data.');
+        WHEN OTHERS THEN
+            RAISE;
+            ROLLBACK;
+    END initiate_payment_transaction;
+
+    -- Procedure: approve payment transactions
+    PROCEDURE approve_transaction (
+        pi_user_name IN VARCHAR2,
+        pi_vehicle_registration_id IN VARCHAR2,
+        pi_pick_up_date IN VARCHAR2
+    ) AS
+        pi_reservation_id reservations.id%TYPE;
+        v_approval_code VARCHAR2(16);
+        e_reservation_not_found EXCEPTION;
+    BEGIN
+        pi_reservation_id := get_reservation_id(pi_user_name, pi_vehicle_registration_id, pi_pick_up_date);
+        
+        -- Check if the reservation ID exists
+        if pi_reservation_id IS NULL THEN
+            RAISE e_reservation_not_found;
+        END IF;
+    
+        -- Generate a random 16-character approval code
+        v_approval_code := DBMS_RANDOM.STRING('A', 16);
+
+        -- Update payment transaction record with the approval code and set status to approved
+        UPDATE payment_transactions
+        SET status = 1, -- Set status to approved
+            approval_code = v_approval_code
+        WHERE reservations_id = pi_reservation_id and approval_code IS NULL;
+
+        DBMS_OUTPUT.PUT_LINE('Transaction Approved. Approval Code: ' || v_approval_code);
+        COMMIT;
+
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            DBMS_OUTPUT.PUT_LINE('Error: Transaction ID not found.');
+        WHEN OTHERS THEN
+            RAISE;
+            ROLLBACK;
+    END approve_transaction;
+END booking_package;
+/
+
 
 -- Procedure: Cancel a booking (should happen only if reservation isn't active yet)
 CREATE OR REPLACE PROCEDURE cancel_reservation (
@@ -1005,149 +1351,6 @@ EXCEPTION
 END cancel_reservation;
 /
 
--- Procedure: Add a payment method / Update a payment method
--- Procedure: View payment methods
--- Procedure: delete payment methods
--- Procedure: initiate payment transactions
-CREATE OR REPLACE PROCEDURE initiate_payment_transaction (
-    pi_reservation_id IN NUMBER,
-    pi_card_number    IN VARCHAR2,
-    pi_discount_code  IN VARCHAR2 DEFAULT NULL
-) AS
-    v_reservation_status reservations.status%TYPE;
-    v_amount             reservations.charge%TYPE;
-    v_discount_amount    discount_types.discount_amount%TYPE;
-    v_payment_status     payment_transactions.status%TYPE;
-    v_payment_method_id  payment_methods.id%TYPE;
-    v_discount_type_id   discount_types.id%TYPE;
-    v_users_id           reservations.users_id%TYPE;
-    v_pm_users_id        payment_methods.users_id%TYPE;
-    e_reservation_not_found     EXCEPTION;
-    e_payment_method_not_found  EXCEPTION;
-    e_invalid_discount_code     EXCEPTION;
-    e_invalid_reservation_state EXCEPTION;
-    e_invalid_discount_amount   EXCEPTION;
-    e_invalid_data              EXCEPTION;
-
-BEGIN
-    -- Check if the reservation ID exists
-    SELECT status, charge, users_id
-    INTO v_reservation_status, v_amount, v_users_id
-    FROM reservations
-    WHERE id = pi_reservation_id;
-
-    -- Exception: Reservation ID not found
-    IF v_reservation_status IS NULL THEN
-        RAISE e_reservation_not_found;
-    END IF;
-
-    -- Check if the reservation status is 'active'
-    IF v_reservation_status != 'active' THEN
-        RAISE e_invalid_reservation_state;
-    END IF;
-
-    -- Check if the payment method exists
-    SELECT id, active_status, users_id
-    INTO v_payment_method_id, v_payment_status, v_pm_users_id
-    FROM payment_methods
-    WHERE card_number = pi_card_number;
-
-    -- Exception: Payment method not found
-    IF v_payment_method_id IS NULL THEN
-        RAISE e_payment_method_not_found;
-    END IF;
-
-    -- Exception: Payment method is not active
-    IF v_payment_status != 1 OR v_pm_users_id != v_users_id THEN
-        RAISE e_invalid_data;
-    END IF;
-
-    -- Check if a discount code is provided
-    IF pi_discount_code IS NOT NULL THEN
-        -- Check if the discount code exists
-        SELECT id, discount_amount
-        INTO v_discount_type_id, v_discount_amount
-        FROM discount_types
-        WHERE code = pi_discount_code;
-
-        -- Exception: Invalid discount code
-        IF v_discount_type_id IS NULL THEN
-            RAISE e_invalid_discount_code;
-        END IF;
-
-        -- Exception: Discount amount is negative
-        IF v_discount_amount < 0 THEN
-            RAISE e_invalid_discount_amount;
-        END IF;
-    END IF;
-
-    -- Insert payment transaction record
-    INSERT INTO payment_transactions (
-        id,
-        status,
-        amount,
-        approval_code,
-        reservations_id,
-        payment_methods_id,
-        discount_types_id
-    ) VALUES (
-        payment_transactions_seq.nextval,
-        0, -- Pending status
-        v_amount - NVL(v_discount_amount, 0), -- Apply discount if available
-        NULL,
-        pi_reservation_id,
-        v_payment_method_id,
-        v_discount_type_id
-    );
-
-    DBMS_OUTPUT.PUT_LINE('Payment transaction initiated for Reservation ID: ' || pi_reservation_id || 'payment_id:' || payment_transactions_seq.currval);
-    COMMIT;
-
-EXCEPTION
-    WHEN e_reservation_not_found THEN
-        DBMS_OUTPUT.PUT_LINE('Error: Reservation ID not found.');
-    WHEN e_payment_method_not_found THEN
-        DBMS_OUTPUT.PUT_LINE('Error: Payment method not found.');
-    WHEN e_invalid_discount_code THEN
-        DBMS_OUTPUT.PUT_LINE('Error: Invalid discount code.');
-    WHEN e_invalid_reservation_state THEN
-        DBMS_OUTPUT.PUT_LINE('Error: Reservation is not in active state.');
-    WHEN e_invalid_discount_amount THEN
-        DBMS_OUTPUT.PUT_LINE('Error: Invalid discount amount.');
-    WHEN e_invalid_data THEN
-        DBMS_OUTPUT.PUT_LINE('Error: Invalid data.');
-    WHEN OTHERS THEN
-        RAISE;
-        ROLLBACK;
-END initiate_payment_transaction;
-/
-
--- Procedure: approve payment transactions
-CREATE OR REPLACE PROCEDURE approve_transaction (
-    pi_reservation_id IN NUMBER
-) AS
-    v_approval_code VARCHAR2(16);
-BEGIN
-    -- Generate a random 16-character approval code
-    v_approval_code := DBMS_RANDOM.STRING('A', 16);
-
-    -- Update payment transaction record with the approval code and set status to approved
-    UPDATE payment_transactions
-    SET status = 1, -- Set status to approved
-        approval_code = v_approval_code
-    WHERE reservations_id = pi_reservation_id and approval_code IS NULL;
-
-    DBMS_OUTPUT.PUT_LINE('Transaction Approved. Approval Code: ' || v_approval_code);
-    COMMIT;
-
-EXCEPTION
-    WHEN NO_DATA_FOUND THEN
-        DBMS_OUTPUT.PUT_LINE('Error: Transaction ID not found.');
-    WHEN OTHERS THEN
-        RAISE;
-        ROLLBACK;
-END approve_transaction;
-/
 
 -- Function: Retrieve rental records for a user
 CREATE OR REPLACE FUNCTION get_user_completed_reservations(user_id IN NUMBER)
@@ -1307,6 +1510,7 @@ EXEC add_reservation('cancelled',110.00,'2024-11-01','2023-11-10','SF034','New Y
 EXEC add_reservation('active',200.00,'2023-05-11','2023-05-14','TS012','New York','Boston', 4,'NYE345MID0456OOP','Abigail','travel shield');
 EXEC add_reservation('completed',300.00,'2023-03-20','2023-04-10','SF004','New York','Boston', 2,'NYE345MID0456OOP','Cat','safety first');
 EXEC add_reservation('active',350.00,'2023-12-01','2023-12-12','CF001','New York','Boston', 6,'NYE678MID4056OOP','Cat','care first');
+
 
 -- Add Payment transactions
 EXEC add_payment_transaction('completed', 100.00, 'VAR300com', 1, '1234876539081234', 'WONDER10');
