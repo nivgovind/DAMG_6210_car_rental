@@ -20,42 +20,39 @@ end;
 -- Customer
 create user customer identified by "BlightPass#111";
 grant create session to customer;
-grant select on locations to customer;
-grant select on vehicle_types to customer;
-grant select on discount_types to customer;
-grant select on insurance_types to customer;
-grant select on users to customer;
-grant select, insert, update, delete on payment_methods to customer;
-grant select, insert, update, delete on reservations to customer;
-grant insert on payment_transactions to customer;
+grant execute on booking_package.initiate_booking to customer;
+grant execute on booking_package.initiate_payment_transaction to customer;
+grant execute on booking_package.approve_transaction to customer;
+grant execute on cancel_reservation to customer;
+grant execute on add_payment_method to customer;
+grant execute on get_payment_methods to customer;
+grant execute on get_user_reservations_history to customer;
+
 
 -- Vendor
 create user vendor identified by "BlightPass#111";
 grant create session to vendor;
-grant select on locations to vendor;
-grant select on vehicle_types to vendor;
-grant select on discount_types to vendor;
-grant select on insurance_types to vendor;
-grant select on users to vendor;
-grant select, insert, update, delete on vehicles to customer;
-grant select on reservations to vendor;
-
+GRANT EXECUTE ON add_vehicle TO vendor;
+GRANT EXECUTE ON update_car_availability TO vendor;
+GRANT EXECUTE ON get_vendor_reservations_history TO vendor;
+GRANT EXECUTE ON get_vendor_vehicle_list TO vendor;
 
 -- Insurance Agent
 create user insurance_agent identified by "BlightPass#111";
 grant create session to insurance_agent;
-grant select on locations to insurance_agent;
-grant select on vehicle_types to insurance_agent;
-grant select, insert, update, delete on insurance_types to insurance_agent;
+GRANT EXECUTE ON add_insurance_type TO insurance_agent;
+GRANT EXECUTE ON update_insurance_type TO insurance_agent;
+GRANT SELECT ON view_insurance_res_rev TO insurance_agent;
+GRANT SELECT ON view_insurance_top_performer TO insurance_agent;
 
 
 -- Analyst
 create user system_analyst identified by "BlightPass#111";
 grant create session to system_analyst;
-grant select on locations to system_analyst;
-grant select on vehicle_types to system_analyst;
-grant select, insert, update on discount_types to system_analyst;
-grant select on insurance_types to system_analyst;
-grant select on users to system_analyst;
-grant select on vehicles to system_analyst;
-grant select on reservations to system_analyst;
+GRANT SELECT ON rentals_and_revenue_by_vehicle_type TO system_analyst;
+GRANT SELECT ON rentals_revenue_by_vendor TO system_analyst;
+GRANT SELECT ON revenue_by_demographic TO system_analyst;
+GRANT SELECT ON revenue_by_location_view TO system_analyst;
+GRANT SELECT ON view_rentals_by_discount_type TO system_analyst;
+GRANT SELECT ON view_total_booking_last_week TO system_analyst;
+GRANT SELECT ON view_all_rental_history TO system_analyst;

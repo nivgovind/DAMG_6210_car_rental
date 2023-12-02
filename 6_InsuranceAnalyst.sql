@@ -1,5 +1,7 @@
+alter session set current_schema=cr_app_admin;
+set serveroutput on;
+
 -- Add new insurance type
--- add_insurance_type (pi_name VARCHAR2, pi_coverage NUMBER)
 EXEC add_insurance_type('VJ special', 30000);
 
 -- update existing insurance type

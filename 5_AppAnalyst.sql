@@ -1,3 +1,6 @@
+alter session set current_schema=cr_app_admin;
+set serveroutput on;
+
 -- View: Analytics rental frequency and revenue by vehicle type
 select * from rentals_and_revenue_by_vehicle_type;
 

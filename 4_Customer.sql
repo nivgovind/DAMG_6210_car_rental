@@ -1,3 +1,6 @@
+alter session set current_schema=cr_app_admin;
+set serveroutput on;
+
 -- View: all available cars in said location (note: reduce location data)
 SELECT * FROM view_all_available_cars;
 
