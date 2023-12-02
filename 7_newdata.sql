@@ -107,19 +107,48 @@ EXEC add_reservation('completed',300.00,'2023-03-20','2023-04-10','SF004','Seatt
 EXEC add_reservation('active',350.00,'2023-12-01','2023-12-12','CF002','Los Angeles','Boston', 6,'NYE678MID4056OOP','Cat','care first');
 EXEC add_reservation('active',350.00,'2023-12-01','2023-12-13','CF003','New York','Boston', 4,'ARK678NEW79084OP','Ocon','care first');
 EXEC add_reservation('completed',450.00,'2023-05-01','2023-06-13','CF004','Los Angeles','Boston', 4,'ARK678NEW79084OP','Ocon','safety first');
-EXEC add_reservation('completed',400.00,'2023-06-14','2023-07-13','SF035','Chicago','Seattle', 4,'ARK678NEW79081OP','Nico','star all');
+EXEC add_reservation('completed',400.00,'2023-06-14','2023-07-13','SF035','Chicago','Seattle', 6,'ARK678NEW79081OP','Nico','star all');
 EXEC add_reservation('completed',400.00,'2023-07-14','2023-08-13','SF036','Boston','Seattle', 4,'ARK678NEW79083OP','Nico','star all');
-EXEC add_reservation('completed',400.00,'2023-08-14','2023-09-13','SF037','Boston','Seattle', 4,'ARK678NEW79083OP','James','travel shield');
+EXEC add_reservation('completed',400.00,'2023-08-14','2023-09-13','SF037','Boston','Seattle', 2,'ARK678NEW79083OP','James','travel shield');
 EXEC add_reservation('completed',450.00,'2023-10-14','2023-11-13','SF038','Seattle','Boston', 4,'ARK678NEW79083OP','James','care first');
 EXEC add_reservation('completed',350.00,'2023-05-14','2023-06-13','SF039','Chicago','Minneapolis', 4,'ARK678NEW79081OP','Adam','safety first');
-EXEC add_reservation('cancelled',380.00,'2023-07-14','2023-08-13','SF051','Chicago','Los Angeles', 4,'ARK678NEW79081OP','Adam','travel shield');
+EXEC add_reservation('cancelled',380.00,'2023-07-14','2023-08-13','SF051','Chicago','Los Angeles', 6,'ARK678NEW79081OP','Adam','travel shield');
 EXEC add_reservation('cancelled',400.00,'2024-08-14','2024-09-13','SF052','Minneapolis','Los Angeles', 4,'ARK678NEW79081OP','Jos','care first');
-EXEC add_reservation('active',400.00,'2023-12-02','2023-12-11','SF053','Minneapolis','Seattle', 4,'ARK678NEW79081OP','Jos','star all');
+EXEC add_reservation('completed',300.00,'2022-12-02','2022-12-11','SF053','Boston','New York', 4,'BOS123NE0W456OOP','Abigail','star all');
+EXEC add_reservation('completed',350.00,'2022-12-02','2022-12-11','SF054','Chicago','Los Angeles', 2,'NYE345MID0456OOP','Cat','travel shield');
+EXEC add_reservation('completed',500.00,'2022-12-02','2022-12-11','SF055','Minneapolis','Seattle', 4,'NYE678MID4056OOP','Ocon','safety first');
+EXEC add_reservation('completed',400.00,'2022-12-02','2022-12-11','SF056','New York','Seattle', 6,'ARK678NEW7908OOP','Nico','care first');
+EXEC add_reservation('completed',550.00,'2022-12-02','2022-12-11','SF057','Minneapolis','Chicago', 4,'ARK678NEW79081OP','James','star all');
+EXEC add_reservation('completed',600.00,'2022-12-02','2022-12-11','SF058','Los Angeles','Boston', 2,'ARK678NEW79082OP','Adam','travel shield');
+EXEC add_reservation('completed',250.00,'2022-12-02','2022-12-11','SF059','Chicago','Seattle', 4,'ARK678NEW79083OP','Jos','star all');
+
 
 
 -- Add Payment transactions
 EXEC add_payment_transaction('completed', 100.00, 'VAR300com', 1, '1234876539081234', 'WONDER10');
 EXEC add_payment_transaction('completed', 200.00, 'WERE200', 2, '1234876539081234', 'NEW2024');
-EXEC add_payment_transaction('completed', 300.00, 'COMP20', 3, '1234876539081234', 'FIRST');
-EXEC add_payment_transaction('completed', 350.00, 'COP20we', 4, '1234876539081234', 'NO_DISC');
+EXEC add_payment_transaction('completed', 300.00, 'COMP20', 3, '7432738484381812', 'FIRST');
+EXEC add_payment_transaction('completed', 350.00, 'COP20wr', 4, '7432738484381812', 'NO_DISC');
+EXEC add_payment_transaction('completed', 110.00, 'COP20wt', 5, '1234876539081234', 'NO_DISC');
+EXEC add_payment_transaction('completed', 200.00, 'COP20wy', 6, '1234876539081234', 'NO_DISC');
+EXEC add_payment_transaction('completed', 300.00, 'COP20wu', 7, '7432738484381812', 'NO_DISC');
+EXEC add_payment_transaction('completed', 350.00, 'COP20wi', 8, '7432738484381812', 'FIRST');
+EXEC add_payment_transaction('completed', 350.00, 'COP20wo', 9, '6363712392387232', 'NO_DISC');
+EXEC add_payment_transaction('completed', 450.00, 'COP20wp', 10, '6363712392387232', 'NO_DISC');
+EXEC add_payment_transaction('completed', 400.00, 'COP20wl', 11, '6363712392387233', 'WONDER10');
+EXEC add_payment_transaction('completed', 400.00, 'COP20wk', 12, '6363712392387233', 'NO_DISC');
+EXEC add_payment_transaction('completed', 400.00, 'COP20wj', 13, '1234567890123456', 'NEW2024');
+EXEC add_payment_transaction('completed', 450.00, 'COP20wh', 14, '1234567890123456', 'NO_DISC');
+EXEC add_payment_transaction('completed', 350.00, 'COP20wg', 15, '6363712392387236', 'NEW2024');
+EXEC add_payment_transaction('completed', 380.00, 'COP20wf', 16, '6363712392387236', 'NO_DISC');
+EXEC add_payment_transaction('completed', 400.00, 'COP20wd', 17, '6363712392387245', 'NO_DISC');
+EXEC add_payment_transaction('completed', 300.00, 'COP20ws', 18, '1234876539081234', 'FIRST');
+EXEC add_payment_transaction('completed', 350.00, 'COP20wa', 19, '7432738484381812', 'NO_DISC');
+EXEC add_payment_transaction('completed', 500.00, 'COP20wz', 20, '6363712392387232', 'NO_DISC');
+EXEC add_payment_transaction('completed', 400.00, 'COP20wx', 21, '6363712392387233', 'NEW2024');
+EXEC add_payment_transaction('completed', 550.00, 'COP20wc', 22, '1234567890123456', 'NO_DISC');
+EXEC add_payment_transaction('completed', 600.00, 'COP20wv', 23, '6363712392387236', 'NEW2024');
+EXEC add_payment_transaction('completed', 250.00, 'COP20wb', 24, '6363712392387245', 'NO_DISC');
+
+
 
