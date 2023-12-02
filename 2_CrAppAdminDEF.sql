@@ -1504,12 +1504,47 @@ CREATE OR REPLACE TRIGGER trg_update_expired_reservations
 BEFORE INSERT OR UPDATE ON reservations
 FOR EACH ROW
 BEGIN
+-- Update vehicles availability_status to 0
+    UPDATE vehicles
+    SET availability_status = 0
+    WHERE id = :NEW.vehicles_id and :NEW.status = 'active';
+
     IF :NEW.dropoff_date < SYSDATE AND :NEW.status != 'completed' THEN
         :NEW.status := 'cancelled';
         DBMS_OUTPUT.PUT_LINE('Reservation ' || :NEW.id || ' updated status: cancelled by trigger.');
     END IF;
 END;
 /
+
+-- set vehicles to unavailable when reservation is active
+-- CREATE OR REPLACE TRIGGER trg_update_vehicle_availability
+-- AFTER INSERT OR UPDATE ON reservations
+-- FOR EACH ROW
+-- BEGIN
+--     IF :NEW.status = 'active' THEN
+--         UPDATE vehicles
+--         SET availability_status = 0
+--         WHERE id = :NEW.vehicles_id;
+
+--         DBMS_OUTPUT.PUT_LINE('Vehicle availability status updated to 0 for Reservation ' || :NEW.id);
+--     END IF;
+-- END;
+-- /
+
+-- CREATE OR REPLACE TRIGGER trg_update_vehicle_availability
+-- AFTER INSERT OR UPDATE ON reservations
+-- FOR EACH ROW
+-- BEGIN
+--     IF :NEW.status = 'cancelled' OR :NEW.status = 'completed' THEN
+--         UPDATE vehicles
+--         SET availability_status = 1
+--         WHERE id = :NEW.vehicles_id;
+
+--         DBMS_OUTPUT.PUT_LINE('Vehicle availability status updated to 1 for Reservation ' || :NEW.id);
+--     END IF;
+-- END;
+-- /
+
 
 -- View payment methods for a user
 CREATE OR REPLACE PROCEDURE get_payment_methods(

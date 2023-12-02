@@ -1,16 +1,3 @@
-# Business rules
-- Vendors must provide company name and tax ID to be able to list vehicles.
-- When a new vehicle is added by the vendor, they should be listed available by default. They will also need a vehicle type from the system to be listed.
-- Payments can be made through previously saved payment methods (CC and debit card).
-- Saved payment methods will be checked if they are within expiry date.
-- Billing address will be assumed to be the address provided in user information unless changed.
-- Customers should have a valid DL and should be over 21 years to be able to rent a car.
-- Customer should have at least one payment method saved before making a reservation
-- Reservation becomes confirmed only if the transaction is approved/successful and the vehicle's availability is verified.
-- Customers can update their reservation, subject to vehicle availability and transaction status.
-- Customers will have the option of choosing from insurance types in the system before making the reservation. If not, a default insurance type will be assigned.
-Vehicles will be marked unavailable once the reservation is active.
-- An active reservation can be defined when the current date is between the pickup date and the drop-off date.
 
 # Covered use cases
 ### App
@@ -141,7 +128,7 @@ EXEC get_payment_methods('Abigail');
 EXEC get_user_reservations_history(user_id as number);
 ```
 
-### Vendor (saurabh)
+### Vendor
 - [x] Add a new car
 ```
 EXEC add_vehicle(30.00, 5000, 'true', 5, 'MIN123NE0W456OOP', 'New York', 'Bob', 'silverado')
