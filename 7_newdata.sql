@@ -87,6 +87,38 @@ EXEC add_vehicle(40.00, 5000, 'true', 5, 'ARK678NEW79083OP', 'Seattle', 'Mick', 
 EXEC add_vehicle(35.00, 5000, 'true', 5, 'ARK678NEW79084OP', 'Seattle', 'Fernando', 'fiesta')
 
 
+-- Insert 20 16-digit random numbers into cc_catalog table
+INSERT INTO cc_catalog (card_number) VALUES ('1234567890123456');
+INSERT INTO cc_catalog (card_number) VALUES ('2345678901234567');
+INSERT INTO cc_catalog (card_number) VALUES ('3456789012345678');
+INSERT INTO cc_catalog (card_number) VALUES ('4567890123456789');
+INSERT INTO cc_catalog (card_number) VALUES ('5678901234567890');
+INSERT INTO cc_catalog (card_number) VALUES ('6789012345678901');
+INSERT INTO cc_catalog (card_number) VALUES ('7890123456789012');
+INSERT INTO cc_catalog (card_number) VALUES ('8901234567890123');
+INSERT INTO cc_catalog (card_number) VALUES ('9012345678901234');
+INSERT INTO cc_catalog (card_number) VALUES ('0123456789012345');
+INSERT INTO cc_catalog (card_number) VALUES ('0987654321098765');
+INSERT INTO cc_catalog (card_number) VALUES ('9876543210987654');
+INSERT INTO cc_catalog (card_number) VALUES ('8765432109876543');
+INSERT INTO cc_catalog (card_number) VALUES ('7654321098765432');
+INSERT INTO cc_catalog (card_number) VALUES ('6543210987654321');
+INSERT INTO cc_catalog (card_number) VALUES ('5432109876543210');
+INSERT INTO cc_catalog (card_number) VALUES ('4321098765432109');
+INSERT INTO cc_catalog (card_number) VALUES ('3210987654321098');
+INSERT INTO cc_catalog (card_number) VALUES ('2109876543210987');
+INSERT INTO cc_catalog (card_number) VALUES ('1098765432109876');
+INSERT INTO cc_catalog (card_number) VALUES ('6363712392387245');
+INSERT INTO cc_catalog (card_number) VALUES ('6363712392387236');
+INSERT INTO cc_catalog (card_number) VALUES ('6363712392387233');
+INSERT INTO cc_catalog (card_number) VALUES ('6363712392387232');
+INSERT INTO cc_catalog (card_number) VALUES ('7432738484381812');
+INSERT INTO cc_catalog (card_number) VALUES ('1234567890123456');
+INSERT INTO cc_catalog (card_number) VALUES ('1234876539081234');
+INSERT INTO cc_catalog (card_number) VALUES ('3000300030003002');
+INSERT INTO cc_catalog (card_number) VALUES ('3000300030003004');
+
+
 -- Add payment methods
 EXEC add_payment_method('1234876539081234','true', '2024-01-31','186','1 kev St, New York, USA','Abigail');
 EXEC add_payment_method('1234567890123456','true', '2027-12-31','123','1 kev St, Seattle, USA','James');

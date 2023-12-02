@@ -9,6 +9,7 @@ EXEC cancel_reservation(1);
 -- - [ ] Procedure: Add a payment method a payment method
 EXEC add_payment_method('3000300030003002','true', '2024-01-31','186','1 kev St, New York, USA','Abigail');
 EXEC add_payment_method('3000300030003004','true', '01-2024','186','1 kev St, New York, USA','Abigail');
+EXEC add_payment_method('3111300030003004','true', '01-2024','186','1 kev St, New York, USA','Abigail');
 
 -- - [ ] View payment methods
 EXEC get_payment_methods('Abigail');
