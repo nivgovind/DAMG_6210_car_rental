@@ -580,7 +580,7 @@ BEGIN
     ) VALUES (
         reservations_seq.nextval,
         pi_status,
-        pi_charge,
+        ABS(pi_charge),
         TO_DATE(pi_pickup_date, 'YYYY-MM-DD'),
         TO_DATE(pi_dropoff_date, 'YYYY-MM-DD'),
         pi_insurance_id,
@@ -802,7 +802,7 @@ CREATE OR REPLACE VIEW rentals_revenue_by_vendor AS
 SELECT 
     u.fname || ' ' || u.lname AS vendor_name,
     count(r.id) as no_of_rentals,
-    NVL(SUM(r.charge), 0) AS total_revenue
+    ABS(NVL(SUM(r.charge), 0)) AS total_revenue
 FROM reservations r
 join vehicles v on r.vehicles_id = v.id
 join users u on v.users_id = u.id   
@@ -1160,7 +1160,7 @@ CREATE OR REPLACE PACKAGE BODY booking_package AS
         v_pick_date:= TO_DATE(pi_pickup_date, 'YYYY-MM-DD');
         v_drop_date:= TO_DATE(pi_dropoff_date, 'YYYY-MM-DD');
         v_no_days:= v_drop_date - v_pick_date;
-        v_charge := v_hourly_rate * v_no_days * 24;
+        v_charge := v_hourly_rate * ABS(v_no_days) * 24;
         v_insurance_id := generate_insurance_id(pi_insurance_type_name);
 
         INSERT INTO reservations (
@@ -1179,7 +1179,7 @@ CREATE OR REPLACE PACKAGE BODY booking_package AS
         ) VALUES (
             reservations_seq.nextval,
             'pending',
-            v_charge,
+            ABS(v_charge),
             v_pick_date,
             v_drop_date,
             v_insurance_id,
