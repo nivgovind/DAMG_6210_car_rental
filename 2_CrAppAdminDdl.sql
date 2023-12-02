@@ -10,6 +10,7 @@ BEGIN
     EXECUTE IMMEDIATE 'DROP TABLE vehicle_types';  
     EXECUTE IMMEDIATE 'DROP TABLE users';
     EXECUTE IMMEDIATE 'DROP TABLE locations';
+    EXECUTE IMMEDIATE 'DROP TABLE cc_catalog';
 EXCEPTION
    WHEN OTHERS THEN
       IF SQLCODE != -942 THEN
@@ -170,6 +171,10 @@ CREATE TABLE payment_transactions (
     CONSTRAINT payment_transactions_reservations_fk FOREIGN KEY ( reservations_id )
         REFERENCES reservations ( id ),
     CONSTRAINT payment_transactions_status_check CHECK (status IN (1, 0))
+);
+
+CREATE TABLE cc_catalog (
+    card_number VARCHAR(16)
 );
 
 -- Procedure for adding location
@@ -923,7 +928,8 @@ BEGIN
     FROM reservations
     WHERE users_id = v_user_id
     AND vehicles_id = v_vehicle_id
-    AND pickup_date = v_pick_date;
+    AND pickup_date = v_pick_date
+    FETCH FIRST 1 ROW ONLY;
 
     RETURN v_reservation_id;
 EXCEPTION
@@ -1057,6 +1063,9 @@ EXCEPTION
 
 END add_payment_method;
 /
+
+
+
 
 -- Package: Customer reservation flow
 CREATE OR REPLACE PACKAGE booking_package AS
@@ -1227,6 +1236,7 @@ CREATE OR REPLACE PACKAGE BODY booking_package AS
         v_discount_type_id   discount_types.id%TYPE;
         v_users_id           reservations.users_id%TYPE;
         v_pm_users_id        payment_methods.users_id%TYPE;
+        v_expiration_date    payment_methods.expiration_date%TYPE;
         e_reservation_not_found     EXCEPTION;
         e_payment_method_not_found  EXCEPTION;
         e_invalid_discount_code     EXCEPTION;
@@ -1252,8 +1262,8 @@ CREATE OR REPLACE PACKAGE BODY booking_package AS
         END IF;
 
         -- Check if the payment method exists
-        SELECT id, active_status, users_id
-        INTO v_payment_method_id, v_payment_status, v_pm_users_id
+        SELECT id, active_status, users_id, expiration_date
+        INTO v_payment_method_id, v_payment_status, v_pm_users_id, v_expiration_date
         FROM payment_methods
         WHERE card_number = pi_card_number;
 
@@ -1263,7 +1273,7 @@ CREATE OR REPLACE PACKAGE BODY booking_package AS
         END IF;
 
         -- Exception: Payment method is not active
-        IF v_payment_status != 1 OR v_pm_users_id != v_users_id THEN
+        IF v_payment_status != 1 OR v_pm_users_id != v_users_id OR v_expiration_date < sysdate THEN
             RAISE e_invalid_data;
         END IF;
 
@@ -1704,5 +1714,36 @@ BEGIN
 EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
+END;
+/
+
+-- Update existing cards as expired if not active
+CREATE OR REPLACE TRIGGER trg_update_expired_pm
+BEFORE INSERT OR UPDATE ON payment_methods
+FOR EACH ROW
+BEGIN
+    IF :NEW.expiration_date < SYSDATE AND :NEW.active_status != 0 THEN
+        :NEW.active_status := 0;
+        DBMS_OUTPUT.PUT_LINE('payment_method ' || :NEW.card_number || ' updated status: expired by trigger.');
+    END IF;
+END;
+/
+
+-- Check validity of card number
+CREATE OR REPLACE TRIGGER trg_check_card_number
+BEFORE INSERT OR UPDATE ON payment_methods
+FOR EACH ROW
+DECLARE
+    v_count NUMBER;
+BEGIN
+    SELECT COUNT(*) INTO v_count
+    FROM cc_catalog
+    WHERE card_number = :NEW.card_number;
+    
+    IF v_count = 0 THEN
+        :NEW.active_status := 0;
+        DBMS_OUTPUT.PUT_LINE('Invalid card: ' || :NEW.card_number);
+        DBMS_OUTPUT.PUT_LINE('payment_method ' || :NEW.card_number || ' updated status: expired by trigger.');
+    END IF;
 END;
 /

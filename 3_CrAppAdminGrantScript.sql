@@ -20,13 +20,12 @@ end;
 -- Customer
 create user customer identified by "BlightPass#111";
 grant create session to customer;
-grant execute on booking_package.initiate_booking to customer;
-grant execute on booking_package.initiate_payment_transaction to customer;
-grant execute on booking_package.approve_transaction to customer;
+grant execute on booking_package to customer;
 grant execute on cancel_reservation to customer;
 grant execute on add_payment_method to customer;
 grant execute on get_payment_methods to customer;
 grant execute on get_user_reservations_history to customer;
+GRANT SELECT ON view_all_available_cars to customer;
 
 
 -- Vendor
